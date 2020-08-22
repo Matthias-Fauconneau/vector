@@ -38,7 +38,7 @@ impl<T> From<[T; $n]> for $v<T> { fn from([$($c),+]: [T; $n]) -> Self { $v{$($c)
 impl<T> From<$v<T>> for [T; $n] { fn from(v : $v<T>) -> Self { [$(v.$c),+] } }
 
 impl<'t, T> From<&'t $v<T>> for [&'t T; $n] { fn from(v : &'t $v<T>) -> Self { [$(&v.$c),+] } }
-#[cfg(feature="iter")] impl<T> $v<T> { pub fn iter(&self) -> impl Iterator<Item=&T> { use $crate::array::IntoIterator; <&Self as Into::<[&T; $n]>>::into(self).into_iter() } }
+#[cfg(feature="iter"/*: vector/array*/)] impl<T> $v<T> { pub fn iter(&self) -> impl Iterator<Item=&T> { use $crate::array::IntoIterator; <&Self as Into::<[&T; $n]>>::into(self).into_iter() } }
 #[cfg(feature="iter")] impl<T> std::iter::FromIterator<T> for $v<T> { fn from_iter<I:std::iter::IntoIterator<Item=T>>(into_iter: I) -> Self {
 	use $crate::array::FromIterator; <[T; $n]>::from_iter(into_iter).into()
 } }
