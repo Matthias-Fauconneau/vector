@@ -68,6 +68,7 @@ impl<T:Ord> $crate::ComponentWiseMinMax for $v<T> {
 	fn component_wise_max(self, other: Self) -> Self { $v{$($c: self.$c .max( other.$c ) ),+} }
 }
 
+impl<T:std::ops::Neg> std::ops::Neg for $v<T> { type Output=$v<T::Output>; fn neg(self) -> Self::Output { Self::Output{$($c: self.$c.neg()),+} } }
 $crate::impl_Op!{$v $($c)+: Add add AddAssign add_assign}
 $crate::impl_Op!{$v $($c)+: Sub sub SubAssign sub_assign}
 $crate::impl_Op!{$v $($c)+: Mul mul MulAssign mul_assign}
