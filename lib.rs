@@ -26,11 +26,11 @@ impl<T: ComponentWiseMinMax+Copy, I:Iterator<Item=MinMax<T>>> Bounds<T> for I {
 	impl<T:$OpAssign> $OpAssign for $v<T> { fn $op_assign(&mut self, b: Self) { $(self.$c.$op_assign(b.$c);)+ } }
 }}
 
-#[cfg(feature="array")] pub extern crate array;
 #[cfg(feature="num")] pub extern crate num;
 #[macro_export] macro_rules! vector { ($n:literal $v:ident $($tuple:ident)+, $($c:ident)+, $($C:ident)+) => {
 use std::ops::{Add,Sub,Mul,Div,AddAssign,SubAssign,MulAssign,DivAssign};
 #[allow(non_camel_case_types)] #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)] pub struct $v<T> { $( pub $c: T ),+ }
+#[cfg(feature="num")] impl<T:Copy+$crate::num::Zero> $crate::num::Zero for $v<T> { const ZERO : Self = $v{$($c: T::ZERO),+}; }
 
 impl<T> From<($($tuple),+)> for $v<T> { fn from(($($c),+): ($($tuple),+)) -> Self { $v{$($c),+} } } // $tuple from $n
 impl<T> From<$v<T>> for ($($tuple),+) { fn from(v : $v<T>) -> Self { ($(v.$c),+) } }
@@ -38,15 +38,14 @@ impl<T> From<[T; $n]> for $v<T> { fn from([$($c),+]: [T; $n]) -> Self { $v{$($c)
 impl<T> From<$v<T>> for [T; $n] { fn from(v : $v<T>) -> Self { [$(v.$c),+] } }
 
 impl<'t, T> From<&'t $v<T>> for [&'t T; $n] { fn from(v : &'t $v<T>) -> Self { [$(&v.$c),+] } }
-#[cfg(feature="iter"/*: vector/array*/)] impl<T> $v<T> { pub fn iter(&self) -> impl Iterator<Item=&T> { use $crate::array::IntoIterator; <&Self as Into::<[&T; $n]>>::into(self).into_iter() } }
-#[cfg(feature="iter")] impl<T> std::iter::FromIterator<T> for $v<T> { fn from_iter<I:std::iter::IntoIterator<Item=T>>(into_iter: I) -> Self {
+//impl<T> $v<T> { pub fn iter(&self) -> impl Iterator<Item=&T> { std::array::IntoIter(self) } }
+/*impl<T> std::iter::FromIterator<T> for $v<T> { fn from_iter<I:std::iter::IntoIterator<Item=T>>(into_iter: I) -> Self {
 	use $crate::array::FromIterator; <[T; $n]>::from_iter(into_iter).into()
-} }
+} }*/
 
 #[derive(Clone, Copy)] pub enum Component { $($C),+ }
-#[cfg(feature="iter")] impl Component {
-	pub fn enumerate() -> impl Iterator<Item=Self> { use $crate::array::IntoIterator; [$(Self::$C),+].into_iter() }
-}
+//impl Component { pub fn enumerate() -> impl Iterator<Item=Self> { std::array::IntoIter([$(Self::$C),+]) } }
+//impl Component { pub fn map<T>(impl Fn(Component) -> T) -> $v<T> { [$(Self::$C),+].map(f) } }
 impl<T> std::ops::Index<Component> for $v<T> {
     type Output = T;
     fn index(&self, component: Component) -> &Self::Output {
@@ -55,13 +54,13 @@ impl<T> std::ops::Index<Component> for $v<T> {
         }
     }
 }
-#[cfg(feature="iter")] pub fn $v<B>(f: impl FnMut(Component) -> B) -> $v<B> { Component::enumerate().map(f).collect() }
+//#[cfg(feature="iter")] pub fn $v<T>(f: impl Fn(Component) -> T) -> $v<T> { Component::map(f).collect() }
 
 impl<T:Eq> PartialEq<T> for $v<T> { fn eq(&self, b: &T) -> bool { $( self.$c==*b )&&+ } }
 
-#[cfg(feature="iter")] impl<T:PartialOrd> PartialOrd for $v<T> { fn partial_cmp(&self, b: &Self) -> Option<std::cmp::Ordering> {
-	Component::enumerate().map(|i| self[i].partial_cmp(&b[i])).fold_first(|c,x| if c == Some(std::cmp::Ordering::Equal) || c == x { x } else { None }).flatten()
-} }
+/*impl<T:PartialOrd> PartialOrd for $v<T> { fn partial_cmp(&self, b: &Self) -> Option<std::cmp::Ordering> {
+	Component::map(|i| self[i].partial_cmp(&b[i])).fold_first(|c,x| if c == Some(std::cmp::Ordering::Equal) || c == x { x } else { None }).flatten()
+} }*/
 
 impl<T:Ord> $crate::ComponentWiseMinMax for $v<T> {
 	fn component_wise_min(self, other: Self) -> Self { $v{$($c: self.$c .min( other.$c ) ),+} }
@@ -77,7 +76,6 @@ $crate::impl_Op!{$v $($c)+: Div div DivAssign div_assign}
 impl<T:Div+Copy> Div<T> for $v<T> { type Output=$v<T::Output>; fn div(self, b: T) -> Self::Output { Self::Output{$($c: self.$c/b),+} } }
 
 impl<T:Copy> From<T> for $v<T> { fn from(v: T) -> Self { $v{$($c:v),+} } }
-#[cfg(feature="num")] impl<T:Copy+$crate::num::Zero> $crate::num::Zero for $v<T> { fn zero() -> Self { T::zero().into() } }
 
 fn mul<T:Copy+Mul>(a: T, b: $v<T>) -> $v<T::Output> { $v{$($c: a*b.$c),+} }
 fn div<T:Copy+Div>(a: T, b: $v<T>) -> $v<T::Output> { $v{$($c: a/b.$c),+} }

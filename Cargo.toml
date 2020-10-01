@@ -8,5 +8,4 @@ edition = '2018'
 path = 'lib.rs'
 
 [dependencies]
-array = { path='../array', optional=true }
 num = { path='../num', optional=true }
