@@ -26,6 +26,7 @@ impl<T: ComponentWiseMinMax+Copy, I:Iterator<Item=MinMax<T>>> Bounds<T> for I {
 	impl<T:$OpAssign> $OpAssign for $v<T> { fn $op_assign(&mut self, b: Self) { $(self.$c.$op_assign(b.$c);)+ } }
 }}
 
+pub extern crate iter;
 #[cfg(feature="num")] pub extern crate num;
 #[macro_export] macro_rules! vector { ($n:literal $v:ident $($tuple:ident)+, $($c:ident)+, $($C:ident)+) => {
 use std::ops::{Add,Sub,Mul,Div,AddAssign,SubAssign,MulAssign,DivAssign};
@@ -38,14 +39,14 @@ impl<T> From<[T; $n]> for $v<T> { fn from([$($c),+]: [T; $n]) -> Self { $v{$($c)
 impl<T> From<$v<T>> for [T; $n] { fn from(v : $v<T>) -> Self { [$(v.$c),+] } }
 
 impl<'t, T> From<&'t $v<T>> for [&'t T; $n] { fn from(v : &'t $v<T>) -> Self { [$(&v.$c),+] } }
-//impl<T> $v<T> { pub fn iter(&self) -> impl Iterator<Item=&T> { std::array::IntoIter(self) } }
-/*impl<T> std::iter::FromIterator<T> for $v<T> { fn from_iter<I:std::iter::IntoIterator<Item=T>>(into_iter: I) -> Self {
-	use $crate::array::FromIterator; <[T; $n]>::from_iter(into_iter).into()
-} }*/
+impl<T> $v<T> { pub fn iter(&self) -> impl Iterator<Item=&T> { std::array::IntoIter::new(self.into()) } }
+impl<T> std::iter::FromIterator<T> for $v<T> { fn from_iter<I:std::iter::IntoIterator<Item=T>>(into_iter: I) -> Self {
+	use $crate::iter::array::FromIterator; <[T; $n]>::from_iter(into_iter).into()
+} }
 
 #[derive(Clone, Copy)] pub enum Component { $($C),+ }
-//impl Component { pub fn enumerate() -> impl Iterator<Item=Self> { std::array::IntoIter([$(Self::$C),+]) } }
-//impl Component { pub fn map<T>(impl Fn(Component) -> T) -> $v<T> { [$(Self::$C),+].map(f) } }
+impl Component { pub fn enumerate() -> impl Iterator<Item=Self> { std::array::IntoIter::new([$(Self::$C),+]) } }
+impl Component { pub fn map<T>(f: impl Fn(Component) -> T) -> $v<T> { [$(Self::$C),+].map(f).into() } }
 impl<T> std::ops::Index<Component> for $v<T> {
     type Output = T;
     fn index(&self, component: Component) -> &Self::Output {
@@ -54,13 +55,13 @@ impl<T> std::ops::Index<Component> for $v<T> {
         }
     }
 }
-//#[cfg(feature="iter")] pub fn $v<T>(f: impl Fn(Component) -> T) -> $v<T> { Component::map(f).collect() }
+pub fn $v<T>(f: impl Fn(Component) -> T) -> $v<T> { Component::map(f) }
 
 impl<T:Eq> PartialEq<T> for $v<T> { fn eq(&self, b: &T) -> bool { $( self.$c==*b )&&+ } }
 
-/*impl<T:PartialOrd> PartialOrd for $v<T> { fn partial_cmp(&self, b: &Self) -> Option<std::cmp::Ordering> {
-	Component::map(|i| self[i].partial_cmp(&b[i])).fold_first(|c,x| if c == Some(std::cmp::Ordering::Equal) || c == x { x } else { None }).flatten()
-} }*/
+impl<T:PartialOrd> PartialOrd for $v<T> { fn partial_cmp(&self, b: &Self) -> Option<std::cmp::Ordering> {
+	Component::enumerate().map(|i| self[i].partial_cmp(&b[i])).fold_first(|c,x| if c == Some(std::cmp::Ordering::Equal) || c == x { x } else { None }).flatten()
+} }
 
 impl<T:Ord> $crate::ComponentWiseMinMax for $v<T> {
 	fn component_wise_min(self, other: Self) -> Self { $v{$($c: self.$c .min( other.$c ) ),+} }
