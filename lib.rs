@@ -12,14 +12,13 @@ impl<T:Ord> ComponentWiseMinMax for T { // /!\ semantic break if impl Ord for Ve
 	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
 }
 
-pub struct MinMax<T> { pub min: T, pub max: T }
-pub trait Bounds<T> { fn bounds(self) -> Option<MinMax<T>>; }
-impl<T: ComponentWiseMinMax+Copy, I:Iterator<Item=MinMax<T>>> Bounds<T> for I {
-	fn bounds(self) -> Option<MinMax<T>> { self.fold_first(|MinMax{min,max}, e| MinMax{
-		min: component_wise_min(min, e.min),
-		max: component_wise_max(max, e.max)
-	}) }
+#[derive(Clone, Copy)] pub struct MinMax<T> { pub min: T, pub max: T }
+impl<T:ComponentWiseMinMax> MinMax<T> {
+	pub fn minmax(self, Self{min, max}: Self) -> Self { Self{min: component_wise_min(self.min, min), max: component_wise_max(self.max, max)} }
 }
+//pub trait IteratorExt<T> { fn minmax(self) -> Option<MinMax<T>>; }
+//impl<T: ComponentWiseMinMax, I:Iterator<Item=MinMax<T>>> IteratorExt<T> for I { fn minmax(self) -> Option<MinMax<T>> { self.fold_first(minmax) } }
+pub fn minmax<T: ComponentWiseMinMax+Copy>(iter: impl Iterator<Item=T>) -> Option<MinMax<T>> { iter.map(|x| MinMax{min: x,max: x}).fold_first(MinMax::minmax) }
 
 #[macro_export] macro_rules! impl_Op { { $v:ident $($c:ident)+: $Op:ident $op:ident $OpAssign:ident $op_assign:ident } => {
 	impl<T:$Op> $Op for $v<T> { type Output=$v<T::Output>; fn $op(self, b: Self) -> Self::Output { Self::Output{$($c: self.$c.$op(b.$c)),+} } }
@@ -55,7 +54,7 @@ impl<T> std::ops::Index<Component> for $v<T> {
         }
     }
 }
-pub fn $v<T>(f: impl Fn(Component) -> T) -> $v<T> { Component::map(f) }
+//pub fn $v<T>(f: impl Fn(Component) -> T) -> $v<T> { Component::map(f) }
 
 impl<T:Eq> PartialEq<T> for $v<T> { fn eq(&self, b: &T) -> bool { $( self.$c==*b )&&+ } }
 
@@ -78,12 +77,12 @@ impl<T:Div+Copy> Div<T> for $v<T> { type Output=$v<T::Output>; fn div(self, b: T
 
 impl<T:Copy> From<T> for $v<T> { fn from(v: T) -> Self { $v{$($c:v),+} } }
 
-fn mul<T:Copy+Mul>(a: T, b: $v<T>) -> $v<T::Output> { $v{$($c: a*b.$c),+} }
-fn div<T:Copy+Div>(a: T, b: $v<T>) -> $v<T::Output> { $v{$($c: a/b.$c),+} }
+impl<T:Copy+Mul> $v<T> { fn mul(s: T, v: Self) -> $v<T::Output> { $v{$($c: s*v.$c),+} } }
+impl Mul<$v<u32>> for u32 { type Output=$v<u32>; fn mul(self, v: $v<u32>) -> Self::Output { $v::mul(self, v) } }
+impl Mul<$v<f32>> for f32 { type Output=$v<f32>; fn mul(self, v: $v<f32>) -> Self::Output { $v::mul(self, v) } }
+impl Mul<$v<f64>> for f64 { type Output=$v<f64>; fn mul(self, v: $v<f64>) -> Self::Output { $v::mul(self, v) } }
 
-impl Mul<$v<u32>> for u32 { type Output=$v<u32>; fn mul(self, b: $v<u32>) -> Self::Output { mul(self, b) } }
-impl Mul<$v<f32>> for f32 { type Output=$v<f32>; fn mul(self, b: $v<f32>) -> Self::Output { mul(self, b) } }
-impl Mul<$v<f64>> for f64 { type Output=$v<f64>; fn mul(self, b: $v<f64>) -> Self::Output { mul(self, b) } }
-impl Div<$v<u32>> for u32 { type Output=$v<u32>; fn div(self, b: $v<u32>) -> Self::Output { div(self, b) } }
-impl Div<$v<f32>> for f32 { type Output=$v<f32>; fn div(self, b: $v<f32>) -> Self::Output { div(self, b) } }
+impl<T:Copy+Div> $v<T> { fn div(s: T, v: Self) -> $v<T::Output> { $v{$($c: s/v.$c),+} } }
+impl Div<$v<u32>> for u32 { type Output=$v<u32>; fn div(self, v: $v<u32>) -> Self::Output { $v::div(self, v) } }
+impl Div<$v<f32>> for f32 { type Output=$v<f32>; fn div(self, v: $v<f32>) -> Self::Output { $v::div(self, v) } }
 }}
