@@ -12,7 +12,7 @@ impl<T:Ord> ComponentWiseMinMax for T { // /!\ semantic break if impl Ord for Ve
 	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
 }
 
-#[derive(Clone, Copy)] pub struct MinMax<T> { pub min: T, pub max: T }
+#[derive(Clone, Copy, Debug)] pub struct MinMax<T> { pub min: T, pub max: T }
 impl<T:ComponentWiseMinMax> MinMax<T> {
 	pub fn minmax(self, Self{min, max}: Self) -> Self { Self{min: component_wise_min(self.min, min), max: component_wise_max(self.max, max)} }
 }
