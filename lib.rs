@@ -7,10 +7,15 @@ pub trait ComponentWiseMinMax {
 pub fn component_wise_min<V: ComponentWiseMinMax>(a: V, b: V) -> V { a.component_wise_min(b) }
 pub fn component_wise_max<V: ComponentWiseMinMax>(a: V, b: V) -> V { a.component_wise_max(b) }
 
-impl<T:Ord> ComponentWiseMinMax for T { // /!\ semantic break if impl Ord for Vector
+/*impl<T:Ord> ComponentWiseMinMax for T { // /!\ semantic break if impl Ord for Vector
+	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
+	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
+}*/
+impl ComponentWiseMinMax for f64 { // /!\ semantic break if impl Ord for Vector
 	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
 	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
 }
+
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)] pub struct MinMax<T> { pub min: T, pub max: T }
 impl<T:ComponentWiseMinMax> MinMax<T> {
@@ -37,11 +42,10 @@ impl<T> From<$v<T>> for ($($tuple),+) { fn from(v : $v<T>) -> Self { ($(v.$c),+)
 impl<T> From<[T; $n]> for $v<T> { fn from([$($c),+]: [T; $n]) -> Self { $v{$($c),+} } }
 impl<T> From<$v<T>> for [T; $n] { fn from(v : $v<T>) -> Self { [$(v.$c),+] } }
 
-impl<'t, T> From<&'t $v<T>> for [&'t T; $n] { fn from(v : &'t $v<T>) -> Self { [$(&v.$c),+] } }
-impl<T> $v<T> { pub fn iter(&self) -> impl Iterator<Item=&T> { std::array::IntoIter::new(self.into()) } }
-impl<T> std::iter::FromIterator<T> for $v<T> { fn from_iter<I:std::iter::IntoIterator<Item=T>>(into_iter: I) -> Self {
-	use $crate::iter::array::FromIterator; <[T; $n]>::from_iter(into_iter).into()
-} }
+//impl<'t, T> From<&'t $v<T>> for [&'t T; $n] { fn from(v : &'t $v<T>) -> Self { [$(&v.$c),+] } }
+impl<T> $v<T> { pub fn as_array(&self) -> [&T; $n] { [$(&self.$c),+] } }
+//impl<T> $v<T> { pub fn iter(&self) -> impl Iterator<Item=&T> { std::array::IntoIter::new(self.into()) } }
+//impl<T> std::iter::FromIterator<T> for $v<T> { fn from_iter<I:$crate::iter::IntoIterator<Item=T>>(into_iter: I) -> Self { $crate::iter::array_from_iter(into_iter).into() } }
 
 #[derive(Clone, Copy)] pub enum Component { $($C),+ }
 impl Component { pub fn enumerate() -> impl Iterator<Item=Self> { std::array::IntoIter::new([$(Self::$C),+]) } }
