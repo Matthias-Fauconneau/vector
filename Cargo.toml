@@ -4,9 +4,9 @@ version = '0.0.0'
 authors = ['Matthias Fauconneau <matthias.fauconneau@gmail.com>']
 edition = '2018'
 
-[lib]
-path = 'lib.rs'
-
 [dependencies]
-iter = { path='../iter' }
-num = { path='../num', optional=true }
+iter= {git='https://github.com/Matthias-Fauconneau/iter'}
+num= {git='https://github.com/Matthias-Fauconneau/num', optional=true}
+
+[lib]
+path= 'lib.rs'
