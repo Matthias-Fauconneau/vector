@@ -1,5 +1,3 @@
-#![feature(iterator_fold_self)]
-
 pub trait ComponentWiseMinMax {
 	fn component_wise_min(self, other: Self) -> Self;
 	fn component_wise_max(self, other: Self) -> Self;
@@ -22,8 +20,8 @@ impl<T:ComponentWiseMinMax> MinMax<T> {
 	pub fn minmax(self, Self{min, max}: Self) -> Self { Self{min: component_wise_min(self.min, min), max: component_wise_max(self.max, max)} }
 }
 //pub trait IteratorExt<T> { fn minmax(self) -> Option<MinMax<T>>; }
-//impl<T: ComponentWiseMinMax, I:Iterator<Item=MinMax<T>>> IteratorExt<T> for I { fn minmax(self) -> Option<MinMax<T>> { self.fold_first(minmax) } }
-pub fn minmax<T: ComponentWiseMinMax+Copy>(iter: impl Iterator<Item=T>) -> Option<MinMax<T>> { iter.map(|x| MinMax{min: x,max: x}).fold_first(MinMax::minmax) }
+//impl<T: ComponentWiseMinMax, I:Iterator<Item=MinMax<T>>> IteratorExt<T> for I { fn minmax(self) -> Option<MinMax<T>> { self.reduce(minmax) } }
+pub fn minmax<T: ComponentWiseMinMax+Copy>(iter: impl Iterator<Item=T>) -> Option<MinMax<T>> { iter.map(|x| MinMax{min: x,max: x}).reduce(MinMax::minmax) }
 
 #[macro_export] macro_rules! impl_Op { { $v:ident $($c:ident)+: $Op:ident $op:ident $OpAssign:ident $op_assign:ident } => {
 	impl<T:$Op> $Op for $v<T> { type Output=$v<T::Output>; fn $op(self, b: Self) -> Self::Output { Self::Output{$($c: self.$c.$op(b.$c)),+} } }
@@ -63,7 +61,7 @@ impl<T> std::ops::Index<Component> for $v<T> {
 impl<T:Eq> PartialEq<T> for $v<T> { fn eq(&self, b: &T) -> bool { $( self.$c==*b )&&+ } }
 
 impl<T:PartialOrd> PartialOrd for $v<T> { fn partial_cmp(&self, b: &Self) -> Option<std::cmp::Ordering> {
-	Component::enumerate().map(|i| self[i].partial_cmp(&b[i])).fold_first(|c,x| if c == Some(std::cmp::Ordering::Equal) || c == x { x } else { None }).flatten()
+	Component::enumerate().map(|i| self[i].partial_cmp(&b[i])).reduce(|c,x| if c == Some(std::cmp::Ordering::Equal) || c == x { x } else { None }).flatten()
 } }
 
 impl<T:Ord> $crate::ComponentWiseMinMax for $v<T> {
