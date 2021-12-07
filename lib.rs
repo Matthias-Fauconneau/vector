@@ -9,17 +9,20 @@ pub fn component_wise_max<V: ComponentWiseMinMax>(a: V, b: V) -> V { a.component
 	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
 	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
 }*/
+impl ComponentWiseMinMax for i8 { // /!\ semantic break if impl Ord for Vector
+	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
+	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
+}
 impl ComponentWiseMinMax for f64 { // /!\ semantic break if impl Ord for Vector
 	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
 	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
 }
 
-
 #[derive(PartialEq, Eq, Clone, Copy, Debug)] pub struct MinMax<T> { pub min: T, pub max: T }
 impl<T:ComponentWiseMinMax> MinMax<T> {
 	pub fn minmax(self, Self{min, max}: Self) -> Self { Self{min: component_wise_min(self.min, min), max: component_wise_max(self.max, max)} }
 }
-pub fn minmax<T: ComponentWiseMinMax+Copy>(iter: impl Iterator<Item=T>) -> Option<MinMax<T>> { iter.map(|x| MinMax{min: x,max: x}).reduce(MinMax::minmax) }
+pub fn minmax<T: ComponentWiseMinMax+Copy>(iter: impl Iterator<Item=T>) -> Option<MinMax<T>> { iter.map(|x| MinMax{min: x, max: x}).reduce(MinMax::minmax) }
 
 #[macro_export] macro_rules! impl_Op { { $v:ident $($c:ident)+: $Op:ident $op:ident $OpAssign:ident $op_assign:ident } => {
 	impl<T:$Op> $Op for $v<T> { type Output=$v<T::Output>; fn $op(self, b: Self) -> Self::Output { Self::Output{$($c: self.$c.$op(b.$c)),+} } }
