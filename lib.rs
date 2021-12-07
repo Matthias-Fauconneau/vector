@@ -59,7 +59,7 @@ impl<T> std::ops::Index<Component> for $v<T> {
     }
 }
 type Iter<'t, T> = std::iter::Map<std::array::IntoIter<Component, $N>, impl FnMut(Component) -> &'t T>;
-impl<T> $v<T> { fn iter(&self) -> Iter<'_, T> { Component::enumerate().into_iter().map(move |c| &self[c] ) } }
+impl<T> $v<T> { pub fn iter(&self) -> Iter<'_, T> { Component::enumerate().into_iter().map(move |c| &self[c] ) } }
 impl<'t, T> IntoIterator for &'t $v<T> {
     type Item = &'t T;
     type IntoIter = Iter<'t, T>;
