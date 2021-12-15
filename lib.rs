@@ -24,8 +24,15 @@ impl<T:ComponentWiseMinMax> MinMax<T> {
 }
 pub fn minmax<T: ComponentWiseMinMax+Copy>(iter: impl Iterator<Item=T>) -> Option<MinMax<T>> { iter.map(|x| MinMax{min: x, max: x}).reduce(MinMax::minmax) }
 
+#[macro_export] macro_rules! forward_ref_binop {{impl $Op:ident, $op:ident for $t:ty, $u:ty} => {
+	impl<'t, T:$Op+Copy> std::ops::$Op<$u> for &'t $t { type Output = <$t as std::ops::$Op<$u>>::Output; fn $op(self, b: $u) -> Self::Output { std::ops::$Op::$op(*self, b) } }
+	impl<T:$Op+Copy> std::ops::$Op<&$u> for $t { type Output = <$t as std::ops::$Op<$u>>::Output; fn $op(self, b: &$u) -> Self::Output { std::ops::$Op::$op(self, *b) } }
+	impl<T:$Op+Copy> std::ops::$Op<&$u> for &$t { type Output = <$t as std::ops::$Op<$u>>::Output; fn $op(self, b: &$u) -> Self::Output { std::ops::$Op::$op(*self, *b) } }
+}}
+
 #[macro_export] macro_rules! impl_Op { { $v:ident $($c:ident)+: $Op:ident $op:ident $OpAssign:ident $op_assign:ident } => {
 	impl<T:$Op> $Op for $v<T> { type Output=$v<T::Output>; fn $op(self, b: Self) -> Self::Output { Self::Output{$($c: self.$c.$op(b.$c)),+} } }
+	$crate::forward_ref_binop!{ impl $Op, $op for $v<T>, $v<T> }
 	impl<T:$OpAssign> $OpAssign for $v<T> { fn $op_assign(&mut self, b: Self) { $(self.$c.$op_assign(b.$c);)+ } }
 }}
 
@@ -62,7 +69,10 @@ impl<T> std::ops::Index<Component> for $v<T> {
     }
 }
 type Iter<'t, T> = std::iter::Map<std::array::IntoIter<Component, $N>, impl FnMut(Component) -> &'t T>;
-impl<T> $v<T> { pub fn iter(&self) -> Iter<'_, T> { Component::enumerate().into_iter().map(move |c| &self[c] ) } }
+impl<T> $v<T> {
+	pub fn iter(&self) -> Iter<'_, T> { Component::enumerate().into_iter().map(move |c| &self[c] ) } 
+	pub fn map<U>(&self, mut f: impl FnMut(&T)->U) -> $v<U> { self.iter().map(|c| f(c)).collect() }
+}
 impl<'t, T> IntoIterator for &'t $v<T> {
     type Item = &'t T;
     type IntoIter = Iter<'t, T>;
