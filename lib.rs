@@ -13,6 +13,10 @@ impl ComponentWiseMinMax for i8 { // /!\ semantic break if impl Ord for Vector
 	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
 	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
 }
+impl ComponentWiseMinMax for u16 { // /!\ semantic break if impl Ord for Vector
+	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
+	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
+}
 impl ComponentWiseMinMax for f64 { // /!\ semantic break if impl Ord for Vector
 	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
 	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
@@ -52,8 +56,8 @@ impl<T> IntoIterator for $v<T> {
 impl<T> From<($($tuple),+)> for $v<T> { fn from(($($c),+): ($($tuple),+)) -> Self { $v{$($c),+} } }
 impl<T> From<$v<T>> for ($($tuple),+) { fn from(v : $v<T>) -> Self { ($(v.$c),+) } }
 
-impl<T> std::iter::FromIterator<T> for $v<T> { fn from_iter<I:IntoIterator<Item=T>>(into_iter: I) -> Self { 
-	let mut iter = into_iter.into_iter(); 
+impl<T> std::iter::FromIterator<T> for $v<T> { fn from_iter<I:IntoIterator<Item=T>>(into_iter: I) -> Self {
+	let mut iter = into_iter.into_iter();
 	$v{$($c: iter.next().unwrap()),+}
 } }
 impl<T> From<[T; $N]> for $v<T> { fn from(a: [T; $N]) -> Self { a.into_iter().collect() } }
@@ -70,7 +74,7 @@ impl<T> std::ops::Index<Component> for $v<T> {
 }
 type Iter<'t, T> = std::iter::Map<std::array::IntoIter<Component, $N>, impl FnMut(Component) -> &'t T>;
 impl<T> $v<T> {
-	pub fn iter(&self) -> Iter<'_, T> { Component::enumerate().into_iter().map(move |c| &self[c] ) } 
+	pub fn iter(&self) -> Iter<'_, T> { Component::enumerate().into_iter().map(move |c| &self[c] ) }
 	pub fn map<U>(&self, mut f: impl FnMut(&T)->U) -> $v<U> { self.iter().map(|c| f(c)).collect() }
 }
 impl<'t, T> IntoIterator for &'t $v<T> {
