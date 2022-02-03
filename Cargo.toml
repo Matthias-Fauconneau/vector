@@ -3,3 +3,4 @@ lib={path='lib.rs'}
 
 [dependencies]
 num= {git='https://github.com/Matthias-Fauconneau/num', optional=true}
+bytemuck = "*"

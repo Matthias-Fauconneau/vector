@@ -41,9 +41,13 @@ pub fn minmax<T: ComponentWiseMinMax+Copy>(iter: impl Iterator<Item=T>) -> Optio
 }}
 
 #[cfg(feature="num")] pub extern crate num;
+pub extern crate bytemuck;
 #[macro_export] macro_rules! vector { ($N:literal $v:ident $($tuple:ident)+, $($c:ident)+, $($C:ident)+) => {
 use std::ops::{Add,Sub,Mul,Div,AddAssign,SubAssign,MulAssign,DivAssign};
-#[allow(non_camel_case_types)] #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)] pub struct $v<T> { $( pub $c: T ),+ }
+#[allow(non_camel_case_types)]
+#[repr(C)] #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)] pub struct $v<T> { $( pub $c: T ),+ }
+unsafe impl<T: $crate::bytemuck::Zeroable> $crate::bytemuck::Zeroable for $v<T> {}
+unsafe impl<T: $crate::bytemuck::Pod> $crate::bytemuck::Pod for $v<T> {}
 
 impl<T> From<$v<T>> for [T; $N] { fn from(v : $v<T>) -> Self { [$(v.$c),+] } }
 
