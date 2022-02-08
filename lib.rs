@@ -17,6 +17,10 @@ impl ComponentWiseMinMax for u16 { // /!\ semantic break if impl Ord for Vector
 	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
 	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
 }
+impl ComponentWiseMinMax for f32 { // /!\ semantic break if impl Ord for Vector
+	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
+	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
+}
 impl ComponentWiseMinMax for f64 { // /!\ semantic break if impl Ord for Vector
 	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
 	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
