@@ -5,26 +5,15 @@ pub trait ComponentWiseMinMax {
 pub fn component_wise_min<V: ComponentWiseMinMax>(a: V, b: V) -> V { a.component_wise_min(b) }
 pub fn component_wise_max<V: ComponentWiseMinMax>(a: V, b: V) -> V { a.component_wise_max(b) }
 
-/*impl<T:Ord> ComponentWiseMinMax for T { // /!\ semantic break if impl Ord for Vector
-	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
-	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
-}*/
-impl ComponentWiseMinMax for i8 { // /!\ semantic break if impl Ord for Vector
-	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
-	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
+macro_rules! impl_ComponentWiseMinMax {
+	($($T:ident)+) => {$(
+		impl ComponentWiseMinMax for $T { // /!\ semantic break if impl Ord for Vector
+			fn component_wise_min(self, other: Self) -> Self { self.min(other) }
+			fn component_wise_max(self, other: Self) -> Self { self.max(other) }
+		}
+	)+};
 }
-impl ComponentWiseMinMax for u16 { // /!\ semantic break if impl Ord for Vector
-	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
-	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
-}
-impl ComponentWiseMinMax for f32 { // /!\ semantic break if impl Ord for Vector
-	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
-	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
-}
-impl ComponentWiseMinMax for f64 { // /!\ semantic break if impl Ord for Vector
-	fn component_wise_min(self, other: Self) -> Self { self.min(other) }
-	fn component_wise_max(self, other: Self) -> Self { self.max(other) }
-}
+impl_ComponentWiseMinMax!{u8 i8 u16 i16 u32 i32 f32 u64 i64 f64}
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)] pub struct MinMax<T> { pub min: T, pub max: T }
 impl<T:ComponentWiseMinMax> MinMax<T> {
@@ -38,7 +27,7 @@ pub fn minmax<T: ComponentWiseMinMax+Copy>(iter: impl Iterator<Item=T>) -> Optio
 	impl<T:$Op+Copy> std::ops::$Op<&$u> for &$t { type Output = <$t as std::ops::$Op<$u>>::Output; fn $op(self, b: &$u) -> Self::Output { std::ops::$Op::$op(*self, *b) } }
 }}
 
-#[macro_export] macro_rules! impl_Op { { $v:ident $($c:ident)+: $Op:ident $op:ident $OpAssign:ident $op_assign:ident } => {
+#[macro_export] macro_rules! impl_Op { { $Vector:ident $($c:ident)+: $Op:ident $op:ident $OpAssign:ident $op_assign:ident } => {
 	impl<T:$Op> $Op for $v<T> { type Output=$v<T::Output>; fn $op(self, b: Self) -> Self::Output { Self::Output{$($c: self.$c.$op(b.$c)),+} } }
 	$crate::forward_ref_binop!{ impl $Op, $op for $v<T>, $v<T> }
 	impl<T:$OpAssign> $OpAssign for $v<T> { fn $op_assign(&mut self, b: Self) { $(self.$c.$op_assign(b.$c);)+ } }
