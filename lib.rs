@@ -95,9 +95,9 @@ impl<T:Eq> PartialEq<T> for $v<T> { fn eq(&self, b: &T) -> bool { self.iter().ma
 impl<T:PartialOrd> PartialOrd for $v<T> { fn partial_cmp(&self, b: &Self) -> Option<std::cmp::Ordering> {
 	self.into_iter().zip(b).map(|(a,b)| a.partial_cmp(b)).reduce(|a,e| if a == Some(std::cmp::Ordering::Equal) || a == e { e } else { None }).flatten()
 } }
-impl<T:Ord> $crate::ComponentWiseMinMax for $v<T> {
-	fn component_wise_min(self, b: Self) -> Self { self.into_iter().zip(b).map(|(a,b)| a.min(b)).collect() }
-	fn component_wise_max(self, b: Self) -> Self { self.into_iter().zip(b).map(|(a,b)| a.max(b)).collect() }
+impl<T:$crate::ComponentWiseMinMax> $crate::ComponentWiseMinMax for $v<T> {
+	fn component_wise_min(self, b: Self) -> Self { self.into_iter().zip(b).map(|(a,b)| a.component_wise_min(b)).collect() }
+	fn component_wise_max(self, b: Self) -> Self { self.into_iter().zip(b).map(|(a,b)| a.component_wise_max(b)).collect() }
 }
 
 impl<T:std::ops::Neg> std::ops::Neg for $v<T> { type Output=$v<T::Output>; fn neg(self) -> Self::Output { Self::Output{$($c: self.$c.neg()),+} } }
