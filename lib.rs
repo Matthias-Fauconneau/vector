@@ -1,3 +1,5 @@
+#![feature(type_alias_impl_trait)]
+
 pub trait ComponentWiseMinMax {
 	fn component_wise_min(self, other: Self) -> Self;
 	fn component_wise_max(self, other: Self) -> Self;
@@ -15,11 +17,19 @@ macro_rules! impl_ComponentWiseMinMax {
 }
 impl_ComponentWiseMinMax!{u8 i8 u16 i16 u32 i32 f32 u64 i64 f64}
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)] pub struct MinMax<T> { pub min: T, pub max: T }
+#[derive(PartialEq,Eq,Clone,Copy,Debug)] pub struct MinMax<T> { pub min: T, pub max: T }
 impl<T:ComponentWiseMinMax> MinMax<T> {
 	pub fn minmax(self, Self{min, max}: Self) -> Self { Self{min: component_wise_min(self.min, min), max: component_wise_max(self.max, max)} }
 }
 pub fn minmax<T: ComponentWiseMinMax+Copy>(iter: impl Iterator<Item=T>) -> Option<MinMax<T>> { iter.map(|x| MinMax{min: x, max: x}).reduce(MinMax::minmax) }
+
+impl<T:std::ops::AddAssign+Copy> MinMax<T> { pub fn translate(&mut self, offset: T) { self.min += offset; self.max += offset; } }
+impl<T:ComponentWiseMinMax+Copy> MinMax<T> {
+	pub fn clip(&self, b: Self) -> Self { Self{
+		min: component_wise_min(self.max, component_wise_max(self.min, b.min)),
+		max: component_wise_max(self.min, component_wise_min(self.max, b.max))
+	} }
+}
 
 #[macro_export] macro_rules! forward_ref_binop {{impl $Op:ident, $op:ident for $t:ty, $u:ty} => {
 	impl<'t, T:$Op+Copy> std::ops::$Op<$u> for &'t $t { type Output = <$t as std::ops::$Op<$u>>::Output; fn $op(self, b: $u) -> Self::Output { std::ops::$Op::$op(*self, b) } }
@@ -35,7 +45,10 @@ pub fn minmax<T: ComponentWiseMinMax+Copy>(iter: impl Iterator<Item=T>) -> Optio
 
 #[cfg(feature="num")] pub extern crate num;
 pub extern crate bytemuck;
-#[macro_export] macro_rules! vector { ($N:literal $Vector:ident $($tuple:ident)+, $($c:ident)+, $($C:ident)+) => {
+
+#[macro_export] macro_rules! vector {
+($N:literal $Vector:ident $($tuple:ident)+, $($c:ident)+, $($C:ident)+) => {
+mod vector {
 use std::ops::{Add,Sub,Mul,Div,AddAssign,SubAssign,MulAssign,DivAssign};
 #[allow(non_camel_case_types)]
 #[repr(C)] #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)] pub struct $Vector<T> { $( pub $c: T ),+ }
@@ -109,4 +122,9 @@ impl Div<$Vector<u32>> for u32 { type Output=$Vector<u32>; fn div(self, v: $Vect
 impl Div<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn div(self, v: $Vector<f32>) -> Self::Output { $Vector::div(self, v) } }
 
 #[cfg(feature="num")] impl<T:Copy+$crate::num::Zero> $crate::num::Zero for $Vector<T> { const ZERO : Self = $Vector{$($c: T::ZERO),+}; }
-}}
+}
+use vector::$Vector;
+}
+}
+
+pub mod xyz;
