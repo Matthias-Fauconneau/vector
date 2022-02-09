@@ -127,5 +127,5 @@ pub use mod_vector::$Vector;
 }
 }
 
-mod xyz;
-pub use xyz::*;
+#[path="xyz.rs"] mod mod_xyz;
+pub use mod_xyz::*;
