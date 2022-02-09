@@ -48,7 +48,7 @@ pub extern crate bytemuck;
 
 #[macro_export] macro_rules! vector {
 ($N:literal $Vector:ident $($tuple:ident)+, $($c:ident)+, $($C:ident)+) => {
-mod vector {
+mod mod_vector {
 use std::ops::{Add,Sub,Mul,Div,AddAssign,SubAssign,MulAssign,DivAssign};
 #[allow(non_camel_case_types)]
 #[repr(C)] #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)] pub struct $Vector<T> { $( pub $c: T ),+ }
@@ -123,7 +123,7 @@ impl Div<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn div(self, v: $Vect
 
 #[cfg(feature="num")] impl<T:Copy+$crate::num::Zero> $crate::num::Zero for $Vector<T> { const ZERO : Self = $Vector{$($c: T::ZERO),+}; }
 }
-pub use vector::$Vector;
+pub use mod_vector::$Vector;
 }
 }
 
