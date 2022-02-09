@@ -128,3 +128,4 @@ use vector::$Vector;
 }
 
 pub mod xyz;
+pub use xyz::*;
