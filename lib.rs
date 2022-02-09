@@ -123,9 +123,9 @@ impl Div<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn div(self, v: $Vect
 
 #[cfg(feature="num")] impl<T:Copy+$crate::num::Zero> $crate::num::Zero for $Vector<T> { const ZERO : Self = $Vector{$($c: T::ZERO),+}; }
 }
-use vector::$Vector;
+pub use vector::$Vector;
 }
 }
 
-pub mod xyz;
+mod xyz;
 pub use xyz::*;
