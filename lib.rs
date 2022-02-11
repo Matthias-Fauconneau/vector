@@ -30,6 +30,7 @@ impl<T:ComponentWiseMinMax+Copy> MinMax<T> {
 		max: component_wise_max(self.min, component_wise_min(self.max, b.max))
 	} }
 }
+impl MinMax<vec2> { pub fn size(&self) -> vec2 { self.max-self.min } }
 
 #[macro_export] macro_rules! forward_ref_binop {{impl $Op:ident, $op:ident for $t:ty, $u:ty} => {
 	impl<'t, T:$Op+Copy> std::ops::$Op<$u> for &'t $t { type Output = <$t as std::ops::$Op<$u>>::Output; fn $op(self, b: $u) -> Self::Output { std::ops::$Op::$op(*self, b) } }

@@ -54,5 +54,6 @@ pub use mod_xy::*;
 mod mod_xyz {
 	vector!(3 xyz T T T, x y z, X Y Z);
 	#[allow(non_camel_case_types)] pub type vec3 = xyz<f32>;
+	impl<T> xyz<T> { pub fn xy(self) -> super::xy<T> { let xyz{x,y,..} = self; super::xy{x, y} } }
 }
 pub use mod_xyz::*;
