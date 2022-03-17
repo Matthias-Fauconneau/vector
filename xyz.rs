@@ -1,5 +1,7 @@
 mod mod_xy {
 vector!(2 xy T T, x y, X Y);
+pub fn dot<T:std::ops::Mul>(a: xy<T>, b: xy<T>) -> T::Output where T::Output:std::iter::Sum { [a.x*b.x, a.y*b.y].into_iter().sum() }
+pub fn sq<T:std::ops::Mul+Copy>(x: xy<T>) -> T::Output where T::Output:std::iter::Sum { dot(x, x) }
 
 impl<T> xy<T> { pub fn yx(self) -> xy<T> { xy{x: self.y, y: self.x} } }
 
@@ -15,15 +17,13 @@ impl From<xy<i32>> for xy<f32> { fn from(f: xy<i32>) -> Self { xy{x: f.x as f32,
 #[allow(non_camel_case_types)] pub type size = xy<u32>;
 #[allow(non_camel_case_types)] pub type vec2 = xy<f32>;
 
-pub fn div_ceil(n: uint2, d: u32) -> uint2 { xy{x:num::div_ceil(n.x,d), y:num::div_ceil(n.y,d)} }
 pub fn lerp(t: f32, a: vec2, b: vec2) -> xy<f32> { (1.-t)*a + t*b }
-
-/*pub fn dot(a: vec2, b: vec2) -> f32 { a.x*b.x + a.y*b.y }
-pub fn sq(x:vec2) -> f32 { dot(x, x) }
-pub fn norm(v:vec2) -> f32 { sq(v).sqrt() }*/
-
 pub fn cross(a: vec2, b: vec2) -> f32 { a.x*b.y - a.y*b.x }
+
+pub fn norm(v:vec2) -> f32 { sq(v).sqrt() }
 pub fn atan(v:vec2) -> f32 { v.y.atan2(v.x) }
+
+pub fn div_ceil(n: uint2, d: u32) -> uint2 { xy{x:num::div_ceil(n.x,d), y:num::div_ceil(n.y,d)} }
 
 pub type Rect = crate::MinMax<int2>;
 impl Rect { pub fn size(&self) -> size { (self.max-self.min).unsigned() } }
@@ -61,9 +61,9 @@ mod mod_xyz {
 		pub fn yz(self) -> super::xy<T> { let xyz{y,z,..} = self; super::xy{x: y, y: z} }
 		pub fn zx(self) -> super::xy<T> { let xyz{z,x,..} = self; super::xy{x: z, y: x} }
 	}
-	pub fn dot(a: vec3, b: vec3) -> f32 { a.x*b.x + a.y*b.y + a.z*b.z }
-	pub fn sq(x: vec3) -> f32 { dot(x, x) }
-	pub fn norm(v: vec3) -> f32 { sq(v).sqrt() }
-	pub fn normalize(v: vec3) -> vec3 { v/norm(v) }
+	//pub fn dot<T:std::ops::Mul>(a: xyz<T>, b: xyz<T>) -> T::Output where T::Output:std::iter::Sum { [a.x*b.x, a.y*b.y, a.z*b.z].into_iter().sum() }
+	//impl<T> Mul for xyz<T> { type Output = T; fn mul(self, b: Self) -> Self::Output { dot(self, b) }}
+	//pub fn norm(v: vec3) -> f32 { dot(v,v).sqrt() }
+	pub fn normalize(v: vec3) -> vec3 { v/(v*v).into_iter().sum::<f32>().sqrt() }
 }
 pub use mod_xyz::*;
