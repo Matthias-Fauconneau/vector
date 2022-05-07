@@ -1,5 +1,3 @@
-#![feature(type_alias_impl_trait)]
-
 pub trait ComponentWiseMinMax {
 	fn component_wise_min(self, other: Self) -> Self;
 	fn component_wise_max(self, other: Self) -> Self;
@@ -18,6 +16,7 @@ macro_rules! impl_ComponentWiseMinMax {
 impl_ComponentWiseMinMax!{u8 i8 u16 i16 u32 i32 f32 u64 i64 f64}
 
 #[derive(PartialEq,Eq,Clone,Copy,Debug)] pub struct MinMax<T> { pub min: T, pub max: T }
+impl<T:num::Zero> num::Zero for MinMax<T> { const ZERO: Self = MinMax{min: T::ZERO, max: T::ZERO}; }
 impl<T:ComponentWiseMinMax> MinMax<T> {
 	pub fn minmax(self, Self{min, max}: Self) -> Self { Self{min: component_wise_min(self.min, min), max: component_wise_max(self.max, max)} }
 }
@@ -44,7 +43,7 @@ impl MinMax<vec2> { pub fn size(&self) -> vec2 { self.max-self.min } }
 	impl<T:$OpAssign> $OpAssign for $Vector<T> { fn $op_assign(&mut self, b: Self) { $(self.$c.$op_assign(b.$c);)+ } }
 }}
 
-#[cfg(feature="num")] pub extern crate num;
+pub extern crate num;
 pub extern crate bytemuck;
 
 #[macro_export] macro_rules! vector {
@@ -57,11 +56,21 @@ unsafe impl<T: $crate::bytemuck::Zeroable> $crate::bytemuck::Zeroable for $Vecto
 unsafe impl<T: $crate::bytemuck::Pod> $crate::bytemuck::Pod for $Vector<T> {}
 
 impl<T> From<$Vector<T>> for [T; $N] { fn from(v : $Vector<T>) -> Self { [$(v.$c),+] } }
-
 impl<T> IntoIterator for $Vector<T> {
     type Item = T;
     type IntoIter = std::array::IntoIter<T, $N>;
     fn into_iter(self) -> Self::IntoIter { Into::<[T; $N]>::into(self).into_iter() }
+}
+
+impl<T> $Vector<T> {
+	pub fn each_ref(&self) -> [&T; $N] { [$(&self.$c),+] }
+	pub fn iter(&self) -> std::array::IntoIter<&T, $N> { self.each_ref().into_iter() }
+	pub fn map<U>(&self, mut f: impl FnMut(&T)->U) -> $Vector<U> { self.iter().map(|c| f(c)).collect() }
+}
+impl<'t, T> IntoIterator for &'t $Vector<T> {
+    type Item = &'t T;
+    type IntoIter = std::array::IntoIter<Self::Item, $N>;
+    fn into_iter(self) -> Self::IntoIter { self.iter() }
 }
 
 impl<T> From<($($tuple),+)> for $Vector<T> { fn from(($($c),+): ($($tuple),+)) -> Self { $Vector{$($c),+} } }
@@ -75,6 +84,7 @@ impl<T> From<[T; $N]> for $Vector<T> { fn from(a: [T; $N]) -> Self { a.into_iter
 
 #[derive(Clone, Copy)] pub enum Component { $($C),+ }
 impl Component { pub fn enumerate() -> [Self; $N] { [$(Self::$C),+] } }
+impl<T> $Vector<T> { pub fn enumerate() -> [Component; $N] { Component::enumerate() } }
 impl<T> std::ops::Index<Component> for $Vector<T> {
     type Output = T;
     fn index(&self, component: Component) -> &Self::Output {
@@ -82,16 +92,6 @@ impl<T> std::ops::Index<Component> for $Vector<T> {
             $(Component::$C => &self.$c),+
         }
     }
-}
-type Iter<'t, T> = std::iter::Map<std::array::IntoIter<Component, $N>, impl FnMut(Component) -> &'t T>;
-impl<T> $Vector<T> {
-	pub fn iter(&self) -> Iter<'_, T> { Component::enumerate().into_iter().map(move |c| &self[c] ) }
-	pub fn map<U>(&self, mut f: impl FnMut(&T)->U) -> $Vector<U> { self.iter().map(|c| f(c)).collect() }
-}
-impl<'t, T> IntoIterator for &'t $Vector<T> {
-    type Item = &'t T;
-    type IntoIter = Iter<'t, T>;
-    fn into_iter(self) -> Self::IntoIter { self.iter() }
 }
 
 impl<T:Eq> PartialEq<T> for $Vector<T> { fn eq(&self, b: &T) -> bool { self.iter().map(|a| a.eq(b)).reduce(|a,e| a && e).unwrap() } }
@@ -122,7 +122,7 @@ impl<T:Copy+Div> $Vector<T> { fn div(s: T, v: Self) -> $Vector<T::Output> { $Vec
 impl Div<$Vector<u32>> for u32 { type Output=$Vector<u32>; fn div(self, v: $Vector<u32>) -> Self::Output { $Vector::div(self, v) } }
 impl Div<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn div(self, v: $Vector<f32>) -> Self::Output { $Vector::div(self, v) } }
 
-#[cfg(feature="num")] impl<T:Copy+$crate::num::Zero> $crate::num::Zero for $Vector<T> { const ZERO : Self = $Vector{$($c: T::ZERO),+}; }
+impl<T:Copy+$crate::num::Zero> $crate::num::Zero for $Vector<T> { const ZERO : Self = $Vector{$($c: T::ZERO),+}; }
 }
 pub use mod_vector::$Vector;
 }

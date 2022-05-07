@@ -1,10 +1,10 @@
-package={name='vector', version='0.0.0', edition='2021'}
+package={name='vector', version='0.0.0',edition='2021'}
 lib={path='lib.rs'}
 
 [dependencies]
-num= {git='https://github.com/Matthias-Fauconneau/num', optional=true}
-bytemuck = "*"
+cfg-if='*'
+num= {git='https://github.com/Matthias-Fauconneau/num'}
+bytemuck='*'
 
-[features]
-zero = ['num']
-default = ['zero']
+#[features]
+#default = ['num']
