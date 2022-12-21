@@ -1,3 +1,4 @@
+#![feature(associated_type_bounds)]
 pub trait ComponentWiseMinMax {
 	fn component_wise_min(self, other: Self) -> Self;
 	fn component_wise_max(self, other: Self) -> Self;
