@@ -1,10 +1,5 @@
 mod mod_xy {
 vector!(2 xy T T, x y, X Y);
-use std::{ops::{Add,Sub,Mul,Div}, iter::Sum};
-pub fn dot<T:Mul>(a: T, b: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { (a*b).into_iter().sum() }
-pub fn sq<T:Mul+Copy>(v: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { dot(v, v) }
-pub fn norm<T:Mul+Copy>(v: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum+num::Sqrt> { num::Sqrt::sqrt(sq(v)) }
-pub fn normalize<T:Mul+Copy+Div<<<T as Mul>::Output as IntoIterator>::Item>>(v: T) -> <T as Div<<<T as Mul>::Output as IntoIterator>::Item>>::Output where <T as Mul>::Output: IntoIterator<Item: Sum+num::Sqrt> { v/norm(v) }
 
 impl<T:std::fmt::Display> std::fmt::Display for xy<T> {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { write!(f, "({}, {})", self.x, self.y) }
@@ -34,9 +29,9 @@ pub fn atan(v:vec2) -> f32 { v.y.atan2(v.x) }
 pub type Rect = crate::MinMax<int2>;
 impl Rect { pub fn size(&self) -> size { (self.max-self.min).unsigned() } }
 
+use std::ops::{Add,Sub,Mul,Div};
 impl Add<Rect> for int2 { type Output=Rect; #[track_caller] fn add(self, r: Rect) -> Self::Output { Rect{min:self+r.min, max:self+r.max} } }
 impl Sub<uint2> for Rect { type Output=Rect; #[track_caller] fn sub(self, b: uint2) -> Self::Output { -b.signed()+self } }
-
 
 impl From<size> for Rect { fn from(size: size) -> Self { Self{ min: num::zero(), max: size.signed()} } }
 
@@ -70,6 +65,6 @@ mod mod_xyz {
 		pub fn zx(self) -> super::xy<T> { let xyz{z,x,..} = self; super::xy{x: z, y: x} }
 	}
 	pub fn cross(a: vec3, b: vec3) -> vec3 { xyz{x: a.y*b.z - a.z*b.y, y: a.z*b.x - a.x*b.z, z: a.x*b.y - a.y*b.x} }
-    pub fn tangent_space(n@xyz{x,y,z}: vec3) -> (vec3, vec3) { let t = if x > y { xyz{x: -z, y: 0., z: x} } else { xyz{x: 0., y: z, z: -y} }; (t, cross(n, t)) }                
+    pub fn tangent_space(n@xyz{x,y,z}: vec3) -> (vec3, vec3) { let t = crate::normalize(if x > y { xyz{x: -z, y: 0., z: x} } else { xyz{x: 0., y: z, z: -y} }); (t, crate::normalize(cross(n, t))) }
 }
 pub use mod_xyz::*;

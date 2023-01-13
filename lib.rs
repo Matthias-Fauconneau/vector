@@ -1,4 +1,11 @@
 #![feature(associated_type_bounds)]
+
+use std::{ops::{Mul,Div}, iter::Sum};
+pub fn dot<T:Mul>(a: T, b: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { (a*b).into_iter().sum() }
+pub fn sq<T:Mul+Copy>(v: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { dot(v, v) }
+pub fn norm<T:Mul+Copy>(v: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum+num::Sqrt> { num::Sqrt::sqrt(sq(v)) }
+pub fn normalize<T:Mul+Copy+Div<<<T as Mul>::Output as IntoIterator>::Item>>(v: T) -> <T as Div<<<T as Mul>::Output as IntoIterator>::Item>>::Output where <T as Mul>::Output: IntoIterator<Item: Sum+num::Sqrt> { v/norm(v) }
+
 pub trait ComponentWiseMinMax {
 	fn component_wise_min(self, other: Self) -> Self;
 	fn component_wise_max(self, other: Self) -> Self;
@@ -15,6 +22,8 @@ macro_rules! impl_ComponentWiseMinMax {
 	)+};
 }
 impl_ComponentWiseMinMax!{u8 i8 u16 i16 u32 i32 f32 u64 i64 f64}
+pub fn min<T: ComponentWiseMinMax+Copy>(iter: impl Iterator<Item=T>) -> Option<T> { iter.reduce(ComponentWiseMinMax::component_wise_min) }
+pub fn max<T: ComponentWiseMinMax+Copy>(iter: impl Iterator<Item=T>) -> Option<T> { iter.reduce(ComponentWiseMinMax::component_wise_max) }
 
 #[derive(PartialEq,Eq,Clone,Copy,Debug)] pub struct MinMax<T> { pub min: T, pub max: T }
 impl<T:num::Zero> num::Zero for MinMax<T> { const ZERO: Self = MinMax{min: T::ZERO, max: T::ZERO}; }
