@@ -10,31 +10,34 @@ pub trait ComponentWiseMinMax {
 	fn component_wise_min(self, other: Self) -> Self;
 	fn component_wise_max(self, other: Self) -> Self;
 }
-pub fn component_wise_min<V: ComponentWiseMinMax>(a: V, b: V) -> V { a.component_wise_min(b) }
-pub fn component_wise_max<V: ComponentWiseMinMax>(a: V, b: V) -> V { a.component_wise_max(b) }
+pub fn component_wise_min<T: ComponentWiseMinMax>(a: T, b: T) -> T { a.component_wise_min(b) }
+pub fn component_wise_max<T: ComponentWiseMinMax>(a: T, b: T) -> T { a.component_wise_max(b) }
 
+// /!\ not defining ComponentWiseMinMax implementation for any Ord to exclude types which might simultaneously have components (i.e vectors) but implement Ord
 macro_rules! impl_ComponentWiseMinMax {
 	($($T:ident)+) => {$(
-		impl ComponentWiseMinMax for $T { // /!\ semantic break if impl Ord for Vector
+		impl ComponentWiseMinMax for $T {
 			fn component_wise_min(self, other: Self) -> Self { self.min(other) }
 			fn component_wise_max(self, other: Self) -> Self { self.max(other) }
 		}
 	)+};
 }
 impl_ComponentWiseMinMax!{u8 i8 u16 i16 u32 i32 f32 u64 i64 f64}
-pub fn min<T: ComponentWiseMinMax+Copy>(iter: impl Iterator<Item=T>) -> Option<T> { iter.reduce(ComponentWiseMinMax::component_wise_min) }
-pub fn max<T: ComponentWiseMinMax+Copy>(iter: impl Iterator<Item=T>) -> Option<T> { iter.reduce(ComponentWiseMinMax::component_wise_max) }
+pub fn min<T: ComponentWiseMinMax+Copy>(iter: impl IntoIterator<Item=T>) -> Option<T> { iter.into_iter().reduce(ComponentWiseMinMax::component_wise_min) }
+pub fn max<T: ComponentWiseMinMax+Copy>(iter: impl IntoIterator<Item=T>) -> Option<T> { iter.into_iter().reduce(ComponentWiseMinMax::component_wise_max) }
 
 #[derive(PartialEq,Eq,Clone,Copy,Debug)] pub struct MinMax<T> { pub min: T, pub max: T }
 impl<T:num::Zero> num::Zero for MinMax<T> { const ZERO: Self = MinMax{min: T::ZERO, max: T::ZERO}; }
+impl<T> From<MinMax<T>> for std::ops::Range<T> { fn from(MinMax{min,max}: MinMax<T>) -> Self { min .. max }}
 impl<T:ComponentWiseMinMax> MinMax<T> {
 	pub fn minmax(self, Self{min, max}: Self) -> Self { Self{min: component_wise_min(self.min, min), max: component_wise_max(self.max, max)} }
 }
-pub fn minmax<T: ComponentWiseMinMax+Copy>(iter: impl Iterator<Item=T>) -> Option<MinMax<T>> { iter.map(|x| MinMax{min: x, max: x}).reduce(MinMax::minmax) }
+pub fn reduce_minmax<T: ComponentWiseMinMax>(iter: impl IntoIterator<Item=MinMax<T>>) -> Option<MinMax<T>> { iter.into_iter().reduce(|a,b| a.minmax(b)) }
+pub fn minmax<T: ComponentWiseMinMax+Copy>(iter: impl IntoIterator<Item=T>) -> Option<MinMax<T>> { reduce_minmax(iter.into_iter().map(|x| MinMax{min: x, max: x})) }
 
 impl<T:std::ops::AddAssign+Copy> MinMax<T> { pub fn translate(&mut self, offset: T) { self.min += offset; self.max += offset; } }
 impl<T:ComponentWiseMinMax+Copy> MinMax<T> {
-	pub fn clip(&self, b: Self) -> Self { Self{
+	pub fn clip(&self, b: &Self) -> Self { Self{
 		min: component_wise_min(self.max, component_wise_max(self.min, b.min)),
 		max: component_wise_max(self.min, component_wise_min(self.max, b.max))
 	} }
@@ -74,8 +77,11 @@ impl<T> IntoIterator for $Vector<T> {
 
 impl<T> $Vector<T> {
 	pub fn each_ref(&self) -> [&T; $N] { [$(&self.$c),+] }
+	pub fn each_mut(&mut self) -> [&mut T; $N] { [$(&mut self.$c),+] }
 	pub fn iter(&self) -> std::array::IntoIter<&T, $N> { self.each_ref().into_iter() }
+	pub fn iter_mut(&mut self) -> std::array::IntoIter<&mut T, $N> { self.each_mut().into_iter() }
 	pub fn map<U>(&self, mut f: impl FnMut(&T)->U) -> $Vector<U> { self.iter().map(|c| f(c)).collect() }
+	pub fn map_mut<U>(&mut self, mut f: impl FnMut(&mut T)->U) -> $Vector<U> { self.iter_mut().map(|c| f(c)).collect() }
 }
 impl<'t, T> IntoIterator for &'t $Vector<T> {
     type Item = &'t T;
@@ -132,7 +138,7 @@ impl<T:Copy+Div> $Vector<T> { fn div(s: T, v: Self) -> $Vector<T::Output> { $Vec
 impl Div<$Vector<u32>> for u32 { type Output=$Vector<u32>; fn div(self, v: $Vector<u32>) -> Self::Output { $Vector::div(self, v) } }
 impl Div<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn div(self, v: $Vector<f32>) -> Self::Output { $Vector::div(self, v) } }
 
-impl<T:Copy+$crate::num::Zero> $crate::num::Zero for $Vector<T> { const ZERO : Self = $Vector{$($c: T::ZERO),+}; }
+impl<T:$crate::num::Zero> $crate::num::Zero for $Vector<T> { const ZERO : Self = $Vector{$($c: T::ZERO),+}; }
 }
 pub use mod_vector::$Vector;
 }
