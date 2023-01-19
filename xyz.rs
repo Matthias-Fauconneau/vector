@@ -16,7 +16,7 @@ impl From<xy<i32>> for xy<f32> { fn from(f: xy<i32>) -> Self { xy{x: f.x as f32,
 impl From<xy<f32>> for xy<u32> { fn from(f: xy<f32>) -> Self { xy{x: f.x as u32, y: f.y as u32} } }
 //impl xy<f32> { pub const fn round(self) -> xy<i32> { xy{x: self.x.round() as i32, y: self.y.round() as i32} } }
 
-pub fn lerp(t: f32, a: xy<f32>, b: xy<f32>) -> xy<f32> { (1.-t)*a + t*b }
+pub fn lerp(t: f32, a: xy<f32>, b: xy<f32>) -> xy<f32> { crate::Lerp::lerp(&t, a, b) }
 
 #[allow(non_camel_case_types)] pub type uint2 = xy<u32>;
 #[allow(non_camel_case_types)] pub type int2 = xy<i32>;

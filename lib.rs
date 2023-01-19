@@ -37,12 +37,14 @@ pub fn minmax<T: ComponentWiseMinMax+Copy>(iter: impl IntoIterator<Item=T>) -> O
 
 impl<T:std::ops::AddAssign+Copy> MinMax<T> { pub fn translate(&mut self, offset: T) { self.min += offset; self.max += offset; } }
 impl<T:ComponentWiseMinMax+Copy> MinMax<T> {
-	pub fn clip(&self, b: &Self) -> Self { Self{
+	pub fn clip(self, b: Self) -> Self { Self{
 		min: component_wise_min(self.max, component_wise_max(self.min, b.min)),
 		max: component_wise_max(self.min, component_wise_min(self.max, b.max))
 	} }
 }
 impl MinMax<vec2> { pub fn size(&self) -> vec2 { self.max-self.min } }
+
+pub trait Lerp<T> { fn lerp(&self, a: T, b: T) -> T; }
 
 #[macro_export] macro_rules! forward_ref_binop {{impl $Op:ident, $op:ident for $t:ty, $u:ty} => {
 	impl<'t, T:$Op+Copy> std::ops::$Op<$u> for &'t $t { type Output = <$t as std::ops::$Op<$u>>::Output; fn $op(self, b: $u) -> Self::Output { std::ops::$Op::$op(*self, b) } }
@@ -65,6 +67,7 @@ mod mod_vector {
 use std::ops::{Add,Sub,Mul,Div,AddAssign,SubAssign,MulAssign,DivAssign};
 #[allow(non_camel_case_types)]
 #[repr(C)] #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)] pub struct $Vector<T> { $( pub $c: T ),+ }
+impl<T:$crate::num::Zero> $crate::num::Zero for $Vector<T> { const ZERO : Self = $Vector{$($c: T::ZERO),+}; }
 unsafe impl<T: $crate::bytemuck::Zeroable> $crate::bytemuck::Zeroable for $Vector<T> {}
 unsafe impl<T: $crate::bytemuck::Pod> $crate::bytemuck::Pod for $Vector<T> {}
 
@@ -134,11 +137,12 @@ impl Mul<$Vector<u32>> for u32 { type Output=$Vector<u32>; fn mul(self, v: $Vect
 impl Mul<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn mul(self, v: $Vector<f32>) -> Self::Output { $Vector::mul(self, v) } }
 impl Mul<$Vector<f64>> for f64 { type Output=$Vector<f64>; fn mul(self, v: $Vector<f64>) -> Self::Output { $Vector::mul(self, v) } }
 
+impl $crate::Lerp<$Vector<f32>> for f32 { fn lerp(&self, a: $Vector<f32>, b: $Vector<f32>) -> $Vector<f32> { let t = *self; assert!(t >= 0. && t<= 1.); (1.-t)*a + t*b } }
+
 impl<T:Copy+Div> $Vector<T> { fn div(s: T, v: Self) -> $Vector<T::Output> { $Vector{$($c: s/v.$c),+} } }
 impl Div<$Vector<u32>> for u32 { type Output=$Vector<u32>; fn div(self, v: $Vector<u32>) -> Self::Output { $Vector::div(self, v) } }
 impl Div<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn div(self, v: $Vector<f32>) -> Self::Output { $Vector::div(self, v) } }
 
-impl<T:$crate::num::Zero> $crate::num::Zero for $Vector<T> { const ZERO : Self = $Vector{$($c: T::ZERO),+}; }
 }
 pub use mod_vector::$Vector;
 }
