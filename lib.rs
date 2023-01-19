@@ -1,4 +1,4 @@
-#![feature(associated_type_bounds)]
+#![feature(associated_type_bounds,const_trait_impl)]
 
 use std::{ops::{Mul,Div}, iter::Sum};
 pub fn dot<T:Mul>(a: T, b: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { (a*b).into_iter().sum() }
@@ -130,7 +130,7 @@ $crate::impl_Op!{$Vector $($c)+: Div div DivAssign div_assign}
 
 impl<T:Div+Copy> Div<T> for $Vector<T> { type Output=$Vector<T::Output>; fn div(self, b: T) -> Self::Output { Self::Output{$($c: self.$c/b),+} } }
 
-impl<T:Copy> From<T> for $Vector<T> { fn from(v: T) -> Self { $Vector{$($c:v),+} } }
+impl<T:Copy> const From<T> for $Vector<T> { fn from(v: T) -> Self { $Vector{$($c:v),+} } }
 
 impl<T:Copy+Mul> $Vector<T> { fn mul(s: T, v: Self) -> $Vector<T::Output> { $Vector{$($c: s*v.$c),+} } }
 impl Mul<$Vector<u32>> for u32 { type Output=$Vector<u32>; fn mul(self, v: $Vector<u32>) -> Self::Output { $Vector::mul(self, v) } }
