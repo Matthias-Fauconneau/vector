@@ -1,4 +1,4 @@
-#![feature(associated_type_bounds,const_trait_impl)]
+#![feature(associated_type_bounds, const_trait_impl, int_roundings)]
 
 use std::{ops::{Mul,Div}, iter::Sum};
 pub fn dot<T:Mul>(a: T, b: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { (a*b).into_iter().sum() }

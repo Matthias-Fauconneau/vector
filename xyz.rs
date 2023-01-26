@@ -34,7 +34,7 @@ impl Sub<uint2> for Rect { type Output=Rect; #[track_caller] fn sub(self, b: uin
 
 impl From<size> for Rect { fn from(size: size) -> Self { Self{ min: num::zero(), max: size.signed()} } }
 
-pub fn div_ceil(n: uint2, d: u32) -> uint2 { xy{x:num::div_ceil(n.x,d), y:num::div_ceil(n.y,d)} }
+pub fn div_ceil(n: uint2, d: u32) -> uint2 { xy{x: u32::div_ceil(n.x,d), y: u32::div_ceil(n.y,d)} }
 pub fn ceil(scale: num::Ratio, v: uint2) -> uint2 { v.map(|&c| scale.ceil(c)) }
 pub fn ifloor(scale: num::Ratio, v: int2) -> int2 { v.map(|&c| scale.ifloor(c)) }
 pub fn iceil(scale: num::Ratio, v: int2) -> int2 { v.map(|&c| scale.iceil(c)) }
