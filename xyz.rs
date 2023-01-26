@@ -11,7 +11,6 @@ impl xy<u32> { pub const fn signed(self) -> xy<i32> { xy{x: self.x as i32, y: se
 impl xy<i32> { pub const fn unsigned(self) -> xy<u32> { xy{x: self.x as u32, y: self.y as u32} } }
 impl From<xy<i32>> for xy<u32> { fn from(i: xy<i32>) -> Self { i.unsigned() } }
 impl From<xy<u32>> for xy<i32> { fn from(u: xy<u32>) -> Self { u.signed() } }
-impl From<xy<u32>> for xy<f32> { fn from(f: xy<u32>) -> Self { xy{x: f.x as f32, y: f.y as f32} } }
 impl From<xy<i32>> for xy<f32> { fn from(f: xy<i32>) -> Self { xy{x: f.x as f32, y: f.y as f32} } }
 impl From<xy<f32>> for xy<u32> { fn from(f: xy<f32>) -> Self { xy{x: f.x as u32, y: f.y as u32} } }
 //impl xy<f32> { pub const fn round(self) -> xy<i32> { xy{x: self.x.round() as i32, y: self.y.round() as i32} } }
@@ -63,6 +62,7 @@ mod mod_xyz {
 		pub fn xy(self) -> super::xy<T> { let xyz{x,y,..} = self; super::xy{x, y} }
 		pub fn yz(self) -> super::xy<T> { let xyz{y,z,..} = self; super::xy{x: y, y: z} }
 		pub fn zx(self) -> super::xy<T> { let xyz{z,x,..} = self; super::xy{x: z, y: x} }
+		pub fn xz(self) -> super::xy<T> { let xyz{x,z,..} = self; super::xy{x, y: z} }
 	}
 	pub fn cross(a: vec3, b: vec3) -> vec3 { xyz{x: a.y*b.z - a.z*b.y, y: a.z*b.x - a.x*b.z, z: a.x*b.y - a.y*b.x} }
     pub fn tangent_space(n@xyz{x,y,z}: vec3) -> (vec3, vec3) { let t = crate::normalize(if x > y { xyz{x: -z, y: 0., z: x} } else { xyz{x: 0., y: z, z: -y} }); (t, crate::normalize(cross(n, t))) }
