@@ -106,7 +106,7 @@ impl<'t, T> IntoIterator for &'t $Vector<T> {
 	$Vector{$($c: iter.next().unwrap()),+}
 } }*/
 
-/*#[derive(Clone, Copy)] pub enum Component { $($C),+ }
+#[derive(Clone, Copy)] pub enum Component { $($C),+ }
 impl Component { pub fn enumerate() -> [Self; $N] { [$(Self::$C),+] } }
 impl<T> $Vector<T> { pub fn enumerate() -> [Component; $N] { Component::enumerate() } }
 impl<T> std::ops::Index<Component> for $Vector<T> {
@@ -116,7 +116,7 @@ impl<T> std::ops::Index<Component> for $Vector<T> {
             $(Component::$C => &self.$c),+
         }
     }
-}*/
+}
 
 impl<T:Eq> PartialEq<T> for $Vector<T> { fn eq(&self, b: &T) -> bool { self.iter().map(|a| a.eq(b)).reduce(|a,e| a && e).unwrap() } }
 impl<T:PartialOrd> PartialOrd for $Vector<T> { fn partial_cmp(&self, b: &Self) -> Option<std::cmp::Ordering> {
