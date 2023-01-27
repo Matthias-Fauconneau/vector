@@ -35,9 +35,9 @@ impl Sub<uint2> for Rect { type Output=Rect; #[track_caller] fn sub(self, b: uin
 impl From<size> for Rect { fn from(size: size) -> Self { Self{ min: num::zero(), max: size.signed()} } }
 
 pub fn div_ceil(n: uint2, d: u32) -> uint2 { xy{x: u32::div_ceil(n.x,d), y: u32::div_ceil(n.y,d)} }
-pub fn ceil(scale: num::Ratio, v: uint2) -> uint2 { v.map(|&c| scale.ceil(c)) }
-pub fn ifloor(scale: num::Ratio, v: int2) -> int2 { v.map(|&c| scale.ifloor(c)) }
-pub fn iceil(scale: num::Ratio, v: int2) -> int2 { v.map(|&c| scale.iceil(c)) }
+pub fn ceil(scale: num::Ratio, v: uint2) -> uint2 { v.map(|c| scale.ceil(c)) }
+pub fn ifloor(scale: num::Ratio, v: int2) -> int2 { v.map(|c| scale.ifloor(c)) }
+pub fn iceil(scale: num::Ratio, v: int2) -> int2 { v.map(|c| scale.iceil(c)) }
 
 macro_rules! forward_ref_binop {{$Op:ident, $op:ident, $u:ty, $t:ty} => {
 	impl<'t> $Op<$u> for &'t $t { type Output = <$t as $Op<$u>>::Output; fn $op(self, b: $u) -> Self::Output { $Op::$op(*self, b) } }
@@ -45,7 +45,7 @@ macro_rules! forward_ref_binop {{$Op:ident, $op:ident, $u:ty, $t:ty} => {
 	impl $Op<&$u> for &$t { type Output = <$t as $Op<$u>>::Output; fn $op(self, b: &$u) -> Self::Output { $Op::$op(*self, *b) } }
 }}
 
-impl Mul<uint2> for num::Ratio { type Output=uint2; #[track_caller] fn mul(self, b: uint2) -> Self::Output { b.map(|&c| self*c) } }
+impl Mul<uint2> for num::Ratio { type Output=uint2; #[track_caller] fn mul(self, b: uint2) -> Self::Output { b.map(|c| self*c) } }
 forward_ref_binop!{Mul, mul, uint2, num::Ratio}
 impl Mul<int2> for num::Ratio { type Output=int2; #[track_caller] fn mul(self, b: int2) -> Self::Output { ifloor(self, b) } }
 forward_ref_binop!{Mul, mul, int2, num::Ratio}

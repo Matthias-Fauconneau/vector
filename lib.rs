@@ -1,4 +1,4 @@
-#![feature(associated_type_bounds, const_trait_impl, int_roundings)]
+#![feature(associated_type_bounds, const_trait_impl, int_roundings, generic_arg_infer, array_zip)]
 
 use std::{ops::{Mul,Div}, iter::Sum};
 pub fn dot<T:Mul>(a: T, b: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { (a*b).into_iter().sum() }
@@ -70,42 +70,43 @@ use std::ops::{Add,Sub,Mul,Div,AddAssign,SubAssign,MulAssign,DivAssign};
 //impl<T: Into<U>, U> From<$Vector<T>> for $Vector<U> { fn from(v: $Vector<T>) -> Self { $Vector{$($c:v.$c.into()),+} } } // conflicts with impl<T> From<T> for T
 impl From<$Vector<u16>> for $Vector<u32> { fn from(v: $Vector<u16>) -> Self { $Vector{$($c:v.$c.into()),+} } }
 impl From<$Vector<u16>> for $Vector<f32> { fn from(v: $Vector<u16>) -> Self { $Vector{$($c:v.$c.into()),+} } }
+impl<T> From<$Vector<T>> for [T; $N] { fn from(v : $Vector<T>) -> Self { [$(v.$c),+] } }
+impl<T> From<[T; $N]> for $Vector<T> { fn from(a: [T; $N]) -> Self { let [$($c),+] = a; $Vector{$($c),+} } }
+impl<T> From<($($tuple),+)> for $Vector<T> { fn from(($($c),+): ($($tuple),+)) -> Self { $Vector{$($c),+} } }
+impl<T> From<$Vector<T>> for ($($tuple),+) { fn from(v : $Vector<T>) -> Self { ($(v.$c),+) } }
 impl<T:Copy> const From<T> for $Vector<T> { fn from(v: T) -> Self { $Vector{$($c:v),+} } }
 impl<T:$crate::num::Zero> $crate::num::Zero for $Vector<T> { const ZERO : Self = $Vector{$($c: T::ZERO),+}; }
 unsafe impl<T: $crate::bytemuck::Zeroable> $crate::bytemuck::Zeroable for $Vector<T> {}
 unsafe impl<T: $crate::bytemuck::Pod> $crate::bytemuck::Pod for $Vector<T> {}
 
-impl<T> From<$Vector<T>> for [T; $N] { fn from(v : $Vector<T>) -> Self { [$(v.$c),+] } }
+impl<T> $Vector<T> {
+	pub fn map<U>(self, mut f: impl FnMut(T)->U) -> $Vector<U> { <[_; _]>::from(self).map(|c| f(c)).into() }
+	pub fn zip<B>(self, b: $Vector<B>) -> $Vector<(T, B)> { <[_; _]>::from(self).zip(b.into()).into() }
+	pub fn each_ref(&self) -> [&T; $N] { [$(&self.$c),+] }
+	//pub fn each_mut(&mut self) -> [&mut T; $N] { [$(&mut self.$c),+] }
+	pub fn iter(&self) -> std::array::IntoIter<&T, $N> { self.each_ref().into_iter() }
+	/*pub fn iter_mut(&mut self) -> std::array::IntoIter<&mut T, $N> { self.each_mut().into_iter() }
+	//pub fn map<U>(&self, mut f: impl FnMut(&T)->U) -> $Vector<U> { self.each_ref().map(|c| f(c)) }
+	pub fn map_mut<U>(&mut self, mut f: impl FnMut(&mut T)->U) -> $Vector<U> { self.each_mut().map(|c| f(c)) }*/
+	//pub fn zip<B>(self, b: $Vector<B>) -> $Vector<(T, B)> { self.each_ref().zip(b.each_ref()) }
+}
+
 impl<T> IntoIterator for $Vector<T> {
     type Item = T;
     type IntoIter = std::array::IntoIter<T, $N>;
     fn into_iter(self) -> Self::IntoIter { Into::<[T; $N]>::into(self).into_iter() }
-}
-
-impl<T> $Vector<T> {
-	pub fn each_ref(&self) -> [&T; $N] { [$(&self.$c),+] }
-	pub fn each_mut(&mut self) -> [&mut T; $N] { [$(&mut self.$c),+] }
-	pub fn iter(&self) -> std::array::IntoIter<&T, $N> { self.each_ref().into_iter() }
-	pub fn iter_mut(&mut self) -> std::array::IntoIter<&mut T, $N> { self.each_mut().into_iter() }
-	pub fn map<U>(&self, mut f: impl FnMut(&T)->U) -> $Vector<U> { self.iter().map(|c| f(c)).collect() }
-	pub fn map_mut<U>(&mut self, mut f: impl FnMut(&mut T)->U) -> $Vector<U> { self.iter_mut().map(|c| f(c)).collect() }
 }
 impl<'t, T> IntoIterator for &'t $Vector<T> {
     type Item = &'t T;
     type IntoIter = std::array::IntoIter<Self::Item, $N>;
     fn into_iter(self) -> Self::IntoIter { self.iter() }
 }
-
-impl<T> From<($($tuple),+)> for $Vector<T> { fn from(($($c),+): ($($tuple),+)) -> Self { $Vector{$($c),+} } }
-impl<T> From<$Vector<T>> for ($($tuple),+) { fn from(v : $Vector<T>) -> Self { ($(v.$c),+) } }
-
-impl<T> std::iter::FromIterator<T> for $Vector<T> { fn from_iter<I:IntoIterator<Item=T>>(into_iter: I) -> Self {
+/*impl<T> std::iter::FromIterator<T> for $Vector<T> { fn from_iter<I:IntoIterator<Item=T>>(into_iter: I) -> Self {
 	let mut iter = into_iter.into_iter();
 	$Vector{$($c: iter.next().unwrap()),+}
-} }
-impl<T> From<[T; $N]> for $Vector<T> { fn from(a: [T; $N]) -> Self { a.into_iter().collect() } }
+} }*/
 
-#[derive(Clone, Copy)] pub enum Component { $($C),+ }
+/*#[derive(Clone, Copy)] pub enum Component { $($C),+ }
 impl Component { pub fn enumerate() -> [Self; $N] { [$(Self::$C),+] } }
 impl<T> $Vector<T> { pub fn enumerate() -> [Component; $N] { Component::enumerate() } }
 impl<T> std::ops::Index<Component> for $Vector<T> {
@@ -115,15 +116,15 @@ impl<T> std::ops::Index<Component> for $Vector<T> {
             $(Component::$C => &self.$c),+
         }
     }
-}
+}*/
 
 impl<T:Eq> PartialEq<T> for $Vector<T> { fn eq(&self, b: &T) -> bool { self.iter().map(|a| a.eq(b)).reduce(|a,e| a && e).unwrap() } }
 impl<T:PartialOrd> PartialOrd for $Vector<T> { fn partial_cmp(&self, b: &Self) -> Option<std::cmp::Ordering> {
 	self.into_iter().zip(b).map(|(a,b)| a.partial_cmp(b)).reduce(|a,e| if a == Some(std::cmp::Ordering::Equal) || a == e { e } else { None }).flatten()
 } }
 impl<T:$crate::ComponentWiseMinMax> $crate::ComponentWiseMinMax for $Vector<T> {
-	fn component_wise_min(self, b: Self) -> Self { self.into_iter().zip(b).map(|(a,b)| a.component_wise_min(b)).collect() }
-	fn component_wise_max(self, b: Self) -> Self { self.into_iter().zip(b).map(|(a,b)| a.component_wise_max(b)).collect() }
+	fn component_wise_min(self, b: Self) -> Self { self.zip(b).map(|(a,b)| a.component_wise_min(b)) }
+	fn component_wise_max(self, b: Self) -> Self { self.zip(b).map(|(a,b)| a.component_wise_max(b)) }
 }
 
 impl<T:std::ops::Neg> std::ops::Neg for $Vector<T> { type Output=$Vector<T::Output>; fn neg(self) -> Self::Output { Self::Output{$($c: self.$c.neg()),+} } }
