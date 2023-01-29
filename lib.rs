@@ -1,4 +1,4 @@
-#![feature(associated_type_bounds, const_trait_impl, int_roundings, generic_arg_infer, array_zip)]
+#![feature(associated_type_bounds, const_trait_impl, int_roundings, generic_arg_infer, array_zip, const_convert)]
 
 use std::{ops::{Mul,Div}, iter::Sum};
 pub fn dot<T:Mul>(a: T, b: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { (a*b).into_iter().sum() }
@@ -32,7 +32,7 @@ impl<T> From<MinMax<T>> for std::ops::Range<T> { fn from(MinMax{min,max}: MinMax
 impl<T:ComponentWiseMinMax> MinMax<T> {
 	pub fn minmax(self, Self{min, max}: Self) -> Self { Self{min: component_wise_min(self.min, min), max: component_wise_max(self.max, max)} }
 }
-pub fn reduce_minmax<T: ComponentWiseMinMax>(iter: impl IntoIterator<Item=MinMax<T>>) -> Option<MinMax<T>> { iter.into_iter().reduce(|a,b| a.minmax(b)) }
+pub fn reduce_minmax<T: ComponentWiseMinMax>(iter: impl IntoIterator<Item=MinMax<T>>) -> Option<MinMax<T>> { iter.into_iter().reduce(MinMax::minmax) }
 pub fn minmax<T: ComponentWiseMinMax+Copy>(iter: impl IntoIterator<Item=T>) -> Option<MinMax<T>> { reduce_minmax(iter.into_iter().map(|x| MinMax{min: x, max: x})) }
 
 impl<T:std::ops::AddAssign+Copy> MinMax<T> { pub fn translate(&mut self, offset: T) { self.min += offset; self.max += offset; } }
@@ -146,6 +146,10 @@ impl $crate::Lerp<$Vector<f32>> for f32 { fn lerp(&self, a: $Vector<f32>, b: $Ve
 impl<T:Copy+Div> $Vector<T> { fn div(s: T, v: Self) -> $Vector<T::Output> { $Vector{$($c: s/v.$c),+} } }
 impl Div<$Vector<u32>> for u32 { type Output=$Vector<u32>; fn div(self, v: $Vector<u32>) -> Self::Output { $Vector::div(self, v) } }
 impl Div<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn div(self, v: $Vector<f32>) -> Self::Output { $Vector::div(self, v) } }
+
+impl<T> $Vector<Option<T>> {
+	pub fn unwrap_or_else(self, f: impl Fn()->T+Copy) -> $Vector<T> { self.map(move |x| x.unwrap_or_else(f)) }
+}
 }
 pub use mod_vector::$Vector;
 }
