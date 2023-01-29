@@ -148,7 +148,8 @@ impl Div<$Vector<u32>> for u32 { type Output=$Vector<u32>; fn div(self, v: $Vect
 impl Div<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn div(self, v: $Vector<f32>) -> Self::Output { $Vector::div(self, v) } }
 
 impl<T> $Vector<Option<T>> {
-	pub fn unwrap_or_else(self, f: impl Fn()->T+Copy) -> $Vector<T> { self.map(move |x| x.unwrap_or_else(f)) }
+	pub fn transpose(self) -> Option<$Vector<T>> { Some($Vector{$($c: self.$c?),+}) }
+	//pub fn unwrap_or_else(self, f: impl Fn()->T+Copy) -> $Vector<T> { self.map(move |x| x.unwrap_or_else(f)) }
 }
 }
 pub use mod_vector::$Vector;

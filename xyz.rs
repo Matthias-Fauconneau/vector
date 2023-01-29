@@ -8,8 +8,7 @@ impl<T:std::fmt::Display> std::fmt::Display for xy<T> {
 impl<T> xy<T> { pub fn yx(self) -> xy<T> { xy{x: self.y, y: self.x} } }
 
 impl xy<u32> { pub const fn signed(self) -> xy<i32> { xy{x: self.x as i32, y: self.y as i32} } }
-//impl xy<i32> { pub fn unsigned(self) -> xy<u32> { xy{x: self.x.try_into().unwrap_or_else(|| panic!("{}", self)), y: self.y.try_into().unwrap()} } }
-impl xy<i32> { pub fn unsigned(self) -> xy<u32> { self.map(|x| x.try_into().ok()).unwrap_or_else(|| panic!("{self}")) } }
+impl xy<i32> { #[track_caller] pub fn unsigned(self) -> xy<u32> { if let Some(u) = self.map(|s| s.try_into().ok()).transpose() { u } else { panic!("{self}") } } }
 impl From<xy<i32>> for xy<u32> { fn from(i: xy<i32>) -> Self { i.unsigned() } }
 impl From<xy<u32>> for xy<i32> { fn from(u: xy<u32>) -> Self { u.signed() } }
 impl From<xy<i32>> for xy<f32> { fn from(f: xy<i32>) -> Self { xy{x: f.x as f32, y: f.y as f32} } }
