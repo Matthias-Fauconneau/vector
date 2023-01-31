@@ -83,11 +83,11 @@ impl<T> $Vector<T> {
 	pub fn map<U>(self, mut f: impl FnMut(T)->U) -> $Vector<U> { <[_; _]>::from(self).map(|c| f(c)).into() }
 	pub fn zip<B>(self, b: $Vector<B>) -> $Vector<(T, B)> { <[_; _]>::from(self).zip(b.into()).into() }
 	pub fn each_ref(&self) -> [&T; $N] { [$(&self.$c),+] }
-	//pub fn each_mut(&mut self) -> [&mut T; $N] { [$(&mut self.$c),+] }
+	pub fn each_mut(&mut self) -> [&mut T; $N] { [$(&mut self.$c),+] }
 	pub fn iter(&self) -> std::array::IntoIter<&T, $N> { self.each_ref().into_iter() }
-	/*pub fn iter_mut(&mut self) -> std::array::IntoIter<&mut T, $N> { self.each_mut().into_iter() }
+	//pub fn iter_mut(&mut self) -> std::array::IntoIter<&mut T, $N> { self.each_mut().into_iter() }
 	//pub fn map<U>(&self, mut f: impl FnMut(&T)->U) -> $Vector<U> { self.each_ref().map(|c| f(c)) }
-	pub fn map_mut<U>(&mut self, mut f: impl FnMut(&mut T)->U) -> $Vector<U> { self.each_mut().map(|c| f(c)) }*/
+	pub fn map_mut<U>(&mut self, mut f: impl FnMut(&mut T)->U) -> $Vector<U> { self.each_mut().map(|c| f(c)).into() }
 	//pub fn zip<B>(self, b: $Vector<B>) -> $Vector<(T, B)> { self.each_ref().zip(b.each_ref()) }
 }
 
