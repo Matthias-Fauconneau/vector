@@ -40,6 +40,7 @@ forward_ref_binop!{Mul, mul, uint2, Ratio}
 impl Mul<int2> for Ratio { type Output=int2; #[track_caller] fn mul(self, b: int2) -> Self::Output { ifloor(self, b) } }
 forward_ref_binop!{Mul, mul, int2, Ratio}
 impl Div<Ratio> for uint2 { type Output=uint2; fn div(self, r: Ratio) -> Self::Output { xy{x:self.x/r, y:self.y/r} } }
+impl Div<Ratio> for int2 { type Output=int2; fn div(self, r: Ratio) -> Self::Output { xy{x:self.x/r, y:self.y/r} } }
 forward_ref_binop!{Div, div, Ratio, uint2}
 
 pub type Rect = crate::MinMax<int2>;

@@ -2,9 +2,5 @@ package={name='vector', version='0.0.0',edition='2021'}
 lib={path='lib.rs'}
 
 [dependencies]
-cfg-if='*'
 num= {git='https://github.com/Matthias-Fauconneau/num'}
 bytemuck='*'
-
-#[features]
-#default = ['num']
