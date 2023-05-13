@@ -4,3 +4,6 @@ lib={path='lib.rs'}
 [dependencies]
 num= {git='https://github.com/Matthias-Fauconneau/num'}
 bytemuck='*'
+
+#[patch.'https://github.com/Matthias-Fauconneau/num']
+#num={path='../num'}

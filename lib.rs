@@ -1,4 +1,4 @@
-#![feature(associated_type_bounds, const_trait_impl, int_roundings, generic_arg_infer, array_zip, const_convert)]
+#![feature(associated_type_bounds, const_trait_impl, int_roundings, generic_arg_infer, array_zip/*, const_convert*/)]
 
 use std::{ops::{Mul,Div}, iter::Sum};
 pub fn dot<T:Mul>(a: T, b: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { (a*b).into_iter().sum() }
@@ -72,7 +72,7 @@ impl<T> From<$Vector<T>> for [T; $N] { fn from(v : $Vector<T>) -> Self { [$(v.$c
 impl<T> From<[T; $N]> for $Vector<T> { fn from(a: [T; $N]) -> Self { let [$($c),+] = a; $Vector{$($c),+} } }
 impl<T> From<($($tuple),+)> for $Vector<T> { fn from(($($c),+): ($($tuple),+)) -> Self { $Vector{$($c),+} } }
 impl<T> From<$Vector<T>> for ($($tuple),+) { fn from(v : $Vector<T>) -> Self { ($(v.$c),+) } }
-impl<T:Copy> const From<T> for $Vector<T> { fn from(v: T) -> Self { $Vector{$($c:v),+} } }
+impl<T:Copy> /*const*/ From<T> for $Vector<T> { fn from(v: T) -> Self { $Vector{$($c:v),+} } }
 impl<T:$crate::num::Zero> $crate::num::Zero for $Vector<T> { const ZERO : Self = $Vector{$($c: T::ZERO),+}; }
 unsafe impl<T: $crate::bytemuck::Zeroable> $crate::bytemuck::Zeroable for $Vector<T> {}
 unsafe impl<T: $crate::bytemuck::Pod> $crate::bytemuck::Pod for $Vector<T> {}
