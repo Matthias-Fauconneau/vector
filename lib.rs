@@ -1,4 +1,4 @@
-#![feature(associated_type_bounds, const_trait_impl, int_roundings, generic_arg_infer, array_zip/*, const_convert*/)]
+#![feature(associated_type_bounds, const_trait_impl, int_roundings, generic_arg_infer)]
 
 use std::{ops::{Mul,Div}, iter::Sum};
 pub fn dot<T:Mul>(a: T, b: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { (a*b).into_iter().sum() }
@@ -79,7 +79,7 @@ unsafe impl<T: $crate::bytemuck::Pod> $crate::bytemuck::Pod for $Vector<T> {}
 
 impl<T> $Vector<T> {
 	pub fn map<U>(self, mut f: impl FnMut(T)->U) -> $Vector<U> { <[_; _]>::from(self).map(|c| f(c)).into() }
-	pub fn zip<B>(self, b: $Vector<B>) -> $Vector<(T, B)> { <[_; _]>::from(self).zip(b.into()).into() }
+	pub fn zip<B>(self, b: $Vector<B>) -> impl Iterator<Item=(T, B)> { self.into_iter().zip(b.into_iter()) }
 	pub fn each_ref(&self) -> [&T; $N] { [$(&self.$c),+] }
 	pub fn each_mut(&mut self) -> [&mut T; $N] { [$(&mut self.$c),+] }
 	pub fn iter(&self) -> std::array::IntoIter<&T, $N> { self.each_ref().into_iter() }
@@ -99,10 +99,10 @@ impl<'t, T> IntoIterator for &'t $Vector<T> {
     type IntoIter = std::array::IntoIter<Self::Item, $N>;
     fn into_iter(self) -> Self::IntoIter { self.iter() }
 }
-/*impl<T> std::iter::FromIterator<T> for $Vector<T> { fn from_iter<I:IntoIterator<Item=T>>(into_iter: I) -> Self {
+impl<T> std::iter::FromIterator<T> for $Vector<T> { fn from_iter<I:IntoIterator<Item=T>>(into_iter: I) -> Self {
 	let mut iter = into_iter.into_iter();
 	$Vector{$($c: iter.next().unwrap()),+}
-} }*/
+} }
 
 #[derive(Clone, Copy)] pub enum Component { $($C),+ }
 impl Component { pub fn enumerate() -> [Self; $N] { [$(Self::$C),+] } }
@@ -121,8 +121,8 @@ impl<T:PartialOrd> PartialOrd for $Vector<T> { fn partial_cmp(&self, b: &Self) -
 	self.into_iter().zip(b).map(|(a,b)| a.partial_cmp(b)).reduce(|a,e| if a == Some(std::cmp::Ordering::Equal) || a == e { e } else { None }).flatten()
 } }
 impl<T:$crate::ComponentWiseMinMax> $crate::ComponentWiseMinMax for $Vector<T> {
-	fn component_wise_min(self, b: Self) -> Self { self.zip(b).map(|(a,b)| a.component_wise_min(b)) }
-	fn component_wise_max(self, b: Self) -> Self { self.zip(b).map(|(a,b)| a.component_wise_max(b)) }
+	fn component_wise_min(self, b: Self) -> Self { self.zip(b).map(|(a,b)| a.component_wise_min(b)).collect() }
+	fn component_wise_max(self, b: Self) -> Self { self.zip(b).map(|(a,b)| a.component_wise_max(b)).collect() }
 }
 
 impl<T:std::ops::Neg> std::ops::Neg for $Vector<T> { type Output=$Vector<T::Output>; fn neg(self) -> Self::Output { Self::Output{$($c: self.$c.neg()),+} } }
@@ -139,7 +139,9 @@ impl Mul<u32> for $Vector<u32> { type Output=$Vector<u32>; fn mul(self, b: u32) 
 impl Mul<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn mul(self, v: $Vector<f32>) -> Self::Output { $Vector::mul(self, v) } }
 impl Mul<$Vector<f64>> for f64 { type Output=$Vector<f64>; fn mul(self, v: $Vector<f64>) -> Self::Output { $Vector::mul(self, v) } }
 
-impl<T> num::Lerp<$Vector<T>> for f32 where f32: num::Lerp<T> { fn lerp(&self, a: $Vector<T>, b: $Vector<T>) -> $Vector<T> { a.zip(b).map(|(a,b)| self.lerp(a,b)) } }
+impl<T> num::Lerp<$Vector<T>> for f32 where f32: num::Lerp<T> { fn lerp(&self, a: $Vector<T>, b: $Vector<T>) -> $Vector<T> { 
+	a.zip(b).map(|(a,b)| self.lerp(a,b)).collect()
+} }
 
 impl<T:Copy+Div> $Vector<T> { fn div(s: T, v: Self) -> $Vector<T::Output> { $Vector{$($c: s/v.$c),+} } }
 impl Div<$Vector<u32>> for u32 { type Output=$Vector<u32>; fn div(self, v: $Vector<u32>) -> Self::Output { $Vector::div(self, v) } }
