@@ -3,11 +3,8 @@
 #![cfg_attr(feature="int_roundings",feature(int_roundings))]
 #![cfg_attr(feature="generic_arg_infer",feature(generic_arg_infer))]
 
-#[cfg(feature="associated_type_bounds")] use std::{ops::{Mul,Div}, iter::Sum};
-#[cfg(feature="associated_type_bounds")] pub fn dot<T:Mul>(a: T, b: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { (a*b).into_iter().sum() }
-#[cfg(feature="associated_type_bounds")] pub fn sq<T:Mul+Copy>(v: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { dot(v, v) }
-#[cfg(feature="associated_type_bounds")] pub fn norm<T:Mul+Copy>(v: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum+num::Sqrt> { num::Sqrt::sqrt(sq(v)) }
-#[cfg(feature="associated_type_bounds")] pub fn normalize<T:Mul+Copy+Div<<<T as Mul>::Output as IntoIterator>::Item>>(v: T) -> <T as Div<<<T as Mul>::Output as IntoIterator>::Item>>::Output where <T as Mul>::Output: IntoIterator<Item: Sum+num::Sqrt> { v/norm(v) }
+#[cfg(feature="associated_type_bounds")] mod associated_type_bounds;
+#[cfg(feature="associated_type_bounds")] pub use associated_type_bounds::*;
 
 pub trait ComponentWiseMinMax {
 	fn component_wise_min(self, other: Self) -> Self;
