@@ -8,8 +8,8 @@ impl<T:std::fmt::Display> std::fmt::Display for xy<T> {
 impl<T> xy<T> { pub fn yx(self) -> xy<T> { xy{x: self.y, y: self.x} } }
 
 impl xy<u32> { pub const fn signed(self) -> xy<i32> { xy{x: self.x as i32, y: self.y as i32} } }
-impl xy<i32> { #[track_caller] pub fn unsigned(self) -> xy<u32> { if let Some(u) = self.map(|s| s.try_into().ok()).transpose() { u } else { panic!("{self}") } } }
-impl From<xy<i32>> for xy<u32> { fn from(i: xy<i32>) -> Self { i.unsigned() } }
+#[cfg(feature="generic_arg_infer")] impl xy<i32> { #[track_caller] pub fn unsigned(self) -> xy<u32> { if let Some(u) = self.map(|s| s.try_into().ok()).transpose() { u } else { panic!("{self}") } } }
+#[cfg(feature="generic_arg_infer")] impl From<xy<i32>> for xy<u32> { fn from(i: xy<i32>) -> Self { i.unsigned() } }
 impl From<xy<u32>> for xy<i32> { fn from(u: xy<u32>) -> Self { u.signed() } }
 impl From<xy<i32>> for xy<f32> { fn from(f: xy<i32>) -> Self { xy{x: f.x as f32, y: f.y as f32} } }
 impl From<xy<f32>> for xy<u32> { fn from(f: xy<f32>) -> Self { xy{x: f.x as u32, y: f.y as u32} } }
@@ -23,37 +23,38 @@ impl From<xy<f32>> for xy<u32> { fn from(f: xy<f32>) -> Self { xy{x: f.x as u32,
 pub fn cross2(a: vec2, b: vec2) -> f32 { a.x*b.y - a.y*b.x }
 pub fn atan(v:vec2) -> f32 { v.y.atan2(v.x) }
 
-use num::Ratio;
-pub fn ceil(scale: Ratio, v: uint2) -> uint2 { v.map(|c| scale.ceil(c)) }
-pub fn ifloor(scale: Ratio, v: int2) -> int2 { v.map(|c| scale.ifloor(c)) }
-pub fn iceil(scale: Ratio, v: int2) -> int2 { v.map(|c| scale.iceil(c)) }
+#[cfg(feature="int_roundings")] use num::Ratio;
+#[cfg(feature="int_roundings")] pub fn ceil(scale: Ratio, v: uint2) -> uint2 { v.map(|c| scale.ceil(c)) }
+#[cfg(feature="int_roundings")] pub fn ifloor(scale: Ratio, v: int2) -> int2 { v.map(|c| scale.ifloor(c)) }
+#[cfg(feature="int_roundings")] pub fn iceil(scale: Ratio, v: int2) -> int2 { v.map(|c| scale.iceil(c)) }
 
-macro_rules! forward_ref_binop {{$Op:ident, $op:ident, $u:ty, $t:ty} => {
+#[cfg(feature="int_roundings")] macro_rules! forward_ref_binop {{$Op:ident, $op:ident, $u:ty, $t:ty} => {
 	impl<'t> $Op<$u> for &'t $t { type Output = <$t as $Op<$u>>::Output; fn $op(self, b: $u) -> Self::Output { $Op::$op(*self, b) } }
 	impl $Op<&$u> for $t { type Output = <$t as $Op<$u>>::Output; fn $op(self, b: &$u) -> Self::Output { $Op::$op(self, *b) } }
 	impl $Op<&$u> for &$t { type Output = <$t as $Op<$u>>::Output; fn $op(self, b: &$u) -> Self::Output { $Op::$op(*self, *b) } }
 }}
 
-use std::ops::{Add,Sub,Mul,Div};
-impl Mul<uint2> for Ratio { type Output=uint2; #[track_caller] fn mul(self, b: uint2) -> Self::Output { ceil(self, b) } }
-forward_ref_binop!{Mul, mul, uint2, Ratio}
-impl Mul<int2> for Ratio { type Output=int2; #[track_caller] fn mul(self, b: int2) -> Self::Output { ifloor(self, b) } }
-forward_ref_binop!{Mul, mul, int2, Ratio}
-impl Div<Ratio> for uint2 { type Output=uint2; fn div(self, r: Ratio) -> Self::Output { xy{x:self.x/r, y:self.y/r} } }
-impl Div<Ratio> for int2 { type Output=int2; fn div(self, r: Ratio) -> Self::Output { xy{x:self.x/r, y:self.y/r} } }
-forward_ref_binop!{Div, div, Ratio, uint2}
+#[cfg(feature="int_roundings")] use std::ops::{Mul,Div};
+#[cfg(feature="int_roundings")] impl Mul<uint2> for Ratio { type Output=uint2; #[track_caller] fn mul(self, b: uint2) -> Self::Output { ceil(self, b) } }
+#[cfg(feature="int_roundings")] forward_ref_binop!{Mul, mul, uint2, Ratio}
+#[cfg(feature="int_roundings")] impl Mul<int2> for Ratio { type Output=int2; #[track_caller] fn mul(self, b: int2) -> Self::Output { ifloor(self, b) } }
+#[cfg(feature="int_roundings")] forward_ref_binop!{Mul, mul, int2, Ratio}
+#[cfg(feature="int_roundings")] impl Div<Ratio> for uint2 { type Output=uint2; fn div(self, r: Ratio) -> Self::Output { xy{x:self.x/r, y:self.y/r} } }
+#[cfg(feature="int_roundings")] impl Div<Ratio> for int2 { type Output=int2; fn div(self, r: Ratio) -> Self::Output { xy{x:self.x/r, y:self.y/r} } }
+#[cfg(feature="int_roundings")] forward_ref_binop!{Div, div, Ratio, uint2}
 
 pub type Rect = crate::MinMax<int2>;
-impl Rect { pub fn size(&self) -> size { (self.max-self.min).unsigned() } }
+#[cfg(feature="generic_arg_infer")] impl Rect { pub fn size(&self) -> size { (self.max-self.min).unsigned() } }
 
+use std::ops::{Add,Sub};
 impl Add<Rect> for int2 { type Output=Rect; #[track_caller] fn add(self, r: Rect) -> Self::Output { Rect{min:self+r.min, max:self+r.max} } }
 impl Sub<uint2> for Rect { type Output=Rect; #[track_caller] fn sub(self, b: uint2) -> Self::Output { -b.signed()+self } }
 
 impl From<size> for Rect { fn from(size: size) -> Self { Self{ min: num::zero(), max: size.signed()} } }
 
-pub fn div_ceil(n: uint2, d: u32) -> uint2 { xy{x: u32::div_ceil(n.x,d), y: u32::div_ceil(n.y,d)} }
+#[cfg(feature="int_roundings")] pub fn div_ceil(n: uint2, d: u32) -> uint2 { xy{x: u32::div_ceil(n.x,d), y: u32::div_ceil(n.y,d)} }
 
-impl Mul<Rect> for Ratio { type Output=Rect; fn mul(self, b: Rect) -> Self::Output { Rect{min: ifloor(self, b.min), max: iceil(self, b.max)} } }
+#[cfg(feature="int_roundings")] impl Mul<Rect> for Ratio { type Output=Rect; fn mul(self, b: Rect) -> Self::Output { Rect{min: ifloor(self, b.min), max: iceil(self, b.max)} } }
 }
 pub use mod_xy::*;
 
@@ -67,6 +68,6 @@ mod mod_xyz {
 		pub fn xz(self) -> super::xy<T> { let xyz{x,z,..} = self; super::xy{x, y: z} }
 	}
 	pub fn cross(a: vec3, b: vec3) -> vec3 { xyz{x: a.y*b.z - a.z*b.y, y: a.z*b.x - a.x*b.z, z: a.x*b.y - a.y*b.x} }
-    pub fn tangent_space(n@xyz{x,y,z}: vec3) -> (vec3, vec3) { let t = crate::normalize(if x > y { xyz{x: -z, y: 0., z: x} } else { xyz{x: 0., y: z, z: -y} }); (t, crate::normalize(cross(n, t))) }
+  #[cfg(feature="associated_type_bounds")] pub fn tangent_space(n@xyz{x,y,z}: vec3) -> (vec3, vec3) { let t = crate::normalize(if x > y { xyz{x: -z, y: 0., z: x} } else { xyz{x: 0., y: z, z: -y} }); (t, crate::normalize(cross(n, t))) }
 }
 pub use mod_xyz::*;

@@ -1,10 +1,13 @@
-#![feature(associated_type_bounds, const_trait_impl, int_roundings, generic_arg_infer)]
+#![cfg_attr(feature="associated_type_bounds",feature(associated_type_bounds))]
+#![cfg_attr(feature="const_trait_impl",feature(const_trait_impl))]
+#![cfg_attr(feature="int_roundings",feature(int_roundings))]
+#![cfg_attr(feature="generic_arg_infer",feature(generic_arg_infer))]
 
-use std::{ops::{Mul,Div}, iter::Sum};
-pub fn dot<T:Mul>(a: T, b: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { (a*b).into_iter().sum() }
-pub fn sq<T:Mul+Copy>(v: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { dot(v, v) }
-pub fn norm<T:Mul+Copy>(v: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum+num::Sqrt> { num::Sqrt::sqrt(sq(v)) }
-pub fn normalize<T:Mul+Copy+Div<<<T as Mul>::Output as IntoIterator>::Item>>(v: T) -> <T as Div<<<T as Mul>::Output as IntoIterator>::Item>>::Output where <T as Mul>::Output: IntoIterator<Item: Sum+num::Sqrt> { v/norm(v) }
+#[cfg(feature="associated_type_bounds")] use std::{ops::{Mul,Div}, iter::Sum};
+#[cfg(feature="associated_type_bounds")] pub fn dot<T:Mul>(a: T, b: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { (a*b).into_iter().sum() }
+#[cfg(feature="associated_type_bounds")] pub fn sq<T:Mul+Copy>(v: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { dot(v, v) }
+#[cfg(feature="associated_type_bounds")] pub fn norm<T:Mul+Copy>(v: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum+num::Sqrt> { num::Sqrt::sqrt(sq(v)) }
+#[cfg(feature="associated_type_bounds")] pub fn normalize<T:Mul+Copy+Div<<<T as Mul>::Output as IntoIterator>::Item>>(v: T) -> <T as Div<<<T as Mul>::Output as IntoIterator>::Item>>::Output where <T as Mul>::Output: IntoIterator<Item: Sum+num::Sqrt> { v/norm(v) }
 
 pub trait ComponentWiseMinMax {
 	fn component_wise_min(self, other: Self) -> Self;
@@ -78,7 +81,7 @@ unsafe impl<T: $crate::bytemuck::Zeroable> $crate::bytemuck::Zeroable for $Vecto
 unsafe impl<T: $crate::bytemuck::Pod> $crate::bytemuck::Pod for $Vector<T> {}
 
 impl<T> $Vector<T> {
-	pub fn map<U>(self, mut f: impl FnMut(T)->U) -> $Vector<U> { <[_; _]>::from(self).map(|c| f(c)).into() }
+	#[cfg(feature="generic_arg_infer")] pub fn map<U>(self, mut f: impl FnMut(T)->U) -> $Vector<U> { <[_; _]>::from(self).map(|c| f(c)).into() }
 	pub fn zip<B>(self, b: $Vector<B>) -> impl Iterator<Item=(T, B)> { self.into_iter().zip(b.into_iter()) }
 	pub fn each_ref(&self) -> [&T; $N] { [$(&self.$c),+] }
 	pub fn each_mut(&mut self) -> [&mut T; $N] { [$(&mut self.$c),+] }
