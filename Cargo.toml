@@ -1,13 +1,12 @@
 package={name='vector', version='0.0.0',edition='2021'}
 lib={path='lib.rs'}
+
 [features]
 associated_type_bounds=[]
 generic_arg_infer=[]
-unstable=['associated_type_bounds','generic_arg_infer']
+int_roundings=['num/int_roundings']
+unstable=['associated_type_bounds','generic_arg_infer','int_roundings']
 
 [dependencies]
-num= {git='https://github.com/Matthias-Fauconneau/num'}
+num={git='https://github.com/Matthias-Fauconneau/num'}
 bytemuck='*'
-
-#[patch.'https://github.com/Matthias-Fauconneau/num']
-#num={path='../num'}

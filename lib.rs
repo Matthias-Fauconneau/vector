@@ -101,7 +101,9 @@ impl<'t, T> IntoIterator for &'t $Vector<T> {
 }
 impl<T> std::iter::FromIterator<T> for $Vector<T> { fn from_iter<I:IntoIterator<Item=T>>(into_iter: I) -> Self {
 	let mut iter = into_iter.into_iter();
-	$Vector{$($c: iter.next().unwrap()),+}
+	let v = $Vector{$($c: iter.next().unwrap()),+};
+	assert!(iter.next().is_none());
+	v
 } }
 
 #[derive(Clone, Copy)] pub enum Component { $($C),+ }
@@ -135,6 +137,7 @@ impl<T:Div+Copy> Div<T> for $Vector<T> { type Output=$Vector<T::Output>; fn div(
 
 //impl<T:Add> std::iter::Sum<$Vector<T>> for $Vector<T> where Self:num::Zero+Add { fn sum<I:Iterator<Item=A>>(iter: I) -> Self { iter.fold(<Self as num::Zero>::ZERO, std::ops::Add::add) } }
 impl std::iter::Sum<$Vector<f32>> for $Vector<f32> { fn sum<I:Iterator<Item=$Vector<f32>>>(iter: I) -> Self { iter.fold(<Self as num::Zero>::ZERO, std::ops::Add::add) } }
+impl std::iter::Sum<$Vector<f64>> for $Vector<f64> { fn sum<I:Iterator<Item=$Vector<f64>>>(iter: I) -> Self { iter.fold(<Self as num::Zero>::ZERO, std::ops::Add::add) } }
 
 impl<T:Copy+Mul> $Vector<T> { fn mul(s: T, v: Self) -> $Vector<T::Output> { $Vector{$($c: s*v.$c),+} } }
 impl Mul<$Vector<u32>> for u32 { type Output=$Vector<u32>; fn mul(self, v: $Vector<u32>) -> Self::Output { $Vector::mul(self, v) } }
@@ -149,6 +152,7 @@ impl<T> num::Lerp<$Vector<T>> for f32 where f32: num::Lerp<T> { fn lerp(&self, a
 impl<T:Copy+Div> $Vector<T> { fn div(s: T, v: Self) -> $Vector<T::Output> { $Vector{$($c: s/v.$c),+} } }
 impl Div<$Vector<u32>> for u32 { type Output=$Vector<u32>; fn div(self, v: $Vector<u32>) -> Self::Output { $Vector::div(self, v) } }
 impl Div<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn div(self, v: $Vector<f32>) -> Self::Output { $Vector::div(self, v) } }
+impl Div<$Vector<f64>> for f64 { type Output=$Vector<f64>; fn div(self, v: $Vector<f64>) -> Self::Output { $Vector::div(self, v) } }
 
 impl<T> $Vector<Option<T>> {
 	pub fn transpose(self) -> Option<$Vector<T>> { Some($Vector{$($c: self.$c?),+}) }
