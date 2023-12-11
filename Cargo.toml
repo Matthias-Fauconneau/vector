@@ -8,5 +8,5 @@ int_roundings=['num/int_roundings']
 unstable=['associated_type_bounds','generic_arg_infer','int_roundings']
 
 [dependencies]
-num={git='https://github.com/Matthias-Fauconneau/num'}
+num={git='https://github.com/Matthias-Fauconneau/num',tag='0'}
 bytemuck='*'
