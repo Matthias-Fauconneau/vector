@@ -42,7 +42,8 @@ impl<T:ComponentWiseMinMax+Copy> MinMax<T> {
 		max: component_wise_max(self.min, component_wise_min(self.max, b.max))
 	} }
 }
-impl MinMax<vec2> { pub fn size(&self) -> vec2 { self.max-self.min } }
+impl<T:std::ops::Sub> MinMax<T> { pub fn size(self) -> T::Output { self.max-self.min } }
+//impl<T> MinMax<T> where for<'t> &'t T: std::ops::Sub { pub fn size(&self) -> <&T as std::ops::Sub>::Output { self.max-self.min } }
 
 #[macro_export] macro_rules! forward_ref_binop {{impl $Op:ident, $op:ident for $t:ty, $u:ty} => {
 	impl<'t, T:$Op+Copy> std::ops::$Op<$u> for &'t $t { type Output = <$t as std::ops::$Op<$u>>::Output; fn $op(self, b: $u) -> Self::Output { std::ops::$Op::$op(*self, b) } }
@@ -83,10 +84,7 @@ impl<T> $Vector<T> {
 	pub fn each_ref(&self) -> [&T; $N] { [$(&self.$c),+] }
 	pub fn each_mut(&mut self) -> [&mut T; $N] { [$(&mut self.$c),+] }
 	pub fn iter(&self) -> std::array::IntoIter<&T, $N> { self.each_ref().into_iter() }
-	//pub fn iter_mut(&mut self) -> std::array::IntoIter<&mut T, $N> { self.each_mut().into_iter() }
-	//pub fn map<U>(&self, mut f: impl FnMut(&T)->U) -> $Vector<U> { self.each_ref().map(|c| f(c)) }
 	pub fn map_mut<U>(&mut self, mut f: impl FnMut(&mut T)->U) -> $Vector<U> { self.each_mut().map(|c| f(c)).into() }
-	//pub fn zip<B>(self, b: $Vector<B>) -> $Vector<(T, B)> { self.each_ref().zip(b.each_ref()) }
 }
 
 impl<T> IntoIterator for $Vector<T> {
@@ -145,7 +143,7 @@ impl Mul<u32> for $Vector<u32> { type Output=$Vector<u32>; fn mul(self, b: u32) 
 impl Mul<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn mul(self, v: $Vector<f32>) -> Self::Output { $Vector::mul(self, v) } }
 impl Mul<$Vector<f64>> for f64 { type Output=$Vector<f64>; fn mul(self, v: $Vector<f64>) -> Self::Output { $Vector::mul(self, v) } }
 
-impl<T> num::Lerp<$Vector<T>> for f32 where f32: num::Lerp<T> { fn lerp(&self, a: $Vector<T>, b: $Vector<T>) -> $Vector<T> { 
+impl<T> num::Lerp<$Vector<T>> for f32 where f32: num::Lerp<T> { fn lerp(&self, a: $Vector<T>, b: $Vector<T>) -> $Vector<T> {
 	a.zip(b).map(|(a,b)| self.lerp(a,b)).collect()
 } }
 
