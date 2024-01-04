@@ -68,7 +68,7 @@ use std::ops::{Add,Sub,Mul,Div,AddAssign,SubAssign,MulAssign,DivAssign};
 #[repr(C)] #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)] pub struct $Vector<T> { $( pub $c: T ),+ }
 //impl<T: Into<U>, U> From<$Vector<T>> for $Vector<U> { fn from(v: $Vector<T>) -> Self { $Vector{$($c:v.$c.into()),+} } } // conflicts with impl<T> From<T> for T
 impl From<$Vector<u16>> for $Vector<u32> { fn from(v: $Vector<u16>) -> Self { $Vector{$($c:v.$c.into()),+} } }
-impl From<$Vector<u32>> for $Vector<f32> { fn from(v: $Vector<u16>) -> Self { $Vector{$($c:v.$c.into()),+} } }
+impl From<$Vector<u32>> for $Vector<f32> { fn from(v: $Vector<u32>) -> Self { $Vector{$($c:v.$c as f32),+} } }
 impl From<$Vector<u16>> for $Vector<f32> { fn from(v: $Vector<u16>) -> Self { $Vector{$($c:v.$c.into()),+} } }
 impl<T> From<$Vector<T>> for [T; $N] { fn from(v : $Vector<T>) -> Self { [$(v.$c),+] } }
 impl<T> From<[T; $N]> for $Vector<T> { fn from(a: [T; $N]) -> Self { let [$($c),+] = a; $Vector{$($c),+} } }
