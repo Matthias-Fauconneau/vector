@@ -47,7 +47,6 @@ pub fn atan(v:vec2) -> f32 { v.y.atan2(v.x) }
 #[cfg(feature="int_roundings")] forward_ref_binop!{Div, div, Ratio, uint2}
 
 pub type Rect = crate::MinMax<int2>;
-#[cfg(feature="generic_arg_infer")] impl Rect { pub fn size(&self) -> size { (self.max-self.min).unsigned() } }
 
 use std::ops::{Add,Sub};
 impl Add<Rect> for int2 { type Output=Rect; #[track_caller] fn add(self, r: Rect) -> Self::Output { Rect{min:self+r.min, max:self+r.max} } }
