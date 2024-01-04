@@ -70,6 +70,7 @@ use std::ops::{Add,Sub,Mul,Div,AddAssign,SubAssign,MulAssign,DivAssign};
 impl From<$Vector<u16>> for $Vector<u32> { fn from(v: $Vector<u16>) -> Self { $Vector{$($c:v.$c.into()),+} } }
 impl From<$Vector<u32>> for $Vector<f32> { fn from(v: $Vector<u32>) -> Self { $Vector{$($c:v.$c as f32),+} } }
 impl From<$Vector<u16>> for $Vector<f32> { fn from(v: $Vector<u16>) -> Self { $Vector{$($c:v.$c.into()),+} } }
+impl From<$Vector<f32>> for $Vector<u32> { fn from(v: $Vector<f32>) -> Self { $Vector{$($c:unsafe{v.$c.to_int_unchecked()}),+} } }
 impl<T> From<$Vector<T>> for [T; $N] { fn from(v : $Vector<T>) -> Self { [$(v.$c),+] } }
 impl<T> From<[T; $N]> for $Vector<T> { fn from(a: [T; $N]) -> Self { let [$($c),+] = a; $Vector{$($c),+} } }
 impl<T> From<($($tuple),+)> for $Vector<T> { fn from(($($c),+): ($($tuple),+)) -> Self { $Vector{$($c),+} } }
