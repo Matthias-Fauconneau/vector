@@ -1,7 +1,7 @@
-#![cfg_attr(feature="associated_type_bounds",feature(associated_type_bounds))]
+#![cfg_attr(feature="associated_type_bounds",feature(associated_type_bounds))] //dot
 #![cfg_attr(feature="const_trait_impl",feature(const_trait_impl))]
 #![cfg_attr(feature="int_roundings",feature(int_roundings))]
-#![cfg_attr(feature="generic_arg_infer",feature(generic_arg_infer))]
+#![cfg_attr(feature="generic_arg_infer",feature(generic_arg_infer))] // map
 
 #[cfg(feature="associated_type_bounds")] mod associated_type_bounds;
 #[cfg(feature="associated_type_bounds")] pub use associated_type_bounds::*;
