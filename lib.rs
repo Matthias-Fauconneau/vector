@@ -1,10 +1,18 @@
-#![cfg_attr(feature="associated_type_bounds",feature(associated_type_bounds))] //dot
 #![cfg_attr(feature="const_trait_impl",feature(const_trait_impl))]
 #![cfg_attr(feature="int_roundings",feature(int_roundings))]
 #![cfg_attr(feature="generic_arg_infer",feature(generic_arg_infer))] // map
 
-#[cfg(feature="associated_type_bounds")] mod associated_type_bounds;
-#[cfg(feature="associated_type_bounds")] pub use associated_type_bounds::*;
+use std::{ops::{Mul,Div,Sub}, iter::Sum};
+pub fn dot<T:Mul>(a: T, b: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { (a*b).into_iter().sum() }
+pub fn sq<T:Mul+Copy>(v: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { dot(v, v) }
+pub fn norm<T:Mul+Copy>(v: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum+num::Sqrt> { num::Sqrt::sqrt(sq(v)) }
+pub fn normalize<T:Mul+Copy+ Div<<<T as Mul>::Output as IntoIterator>::Item> >(v: T) ->
+	<T as Div<<<T as Mul>::Output as IntoIterator>::Item> >::Output
+  where <T as Mul>::Output: IntoIterator<Item: Sum+num::Sqrt>
+	{ v/norm(v) }
+pub fn distance<T:Sub>(a: T, b: T) -> <<<T as Sub>::Output as Mul>::Output as IntoIterator>::Item
+	where T::Output: Mul+Copy, <<T as Sub>::Output as Mul>::Output: IntoIterator<Item: Sum+num::Sqrt>
+	{ norm(b-a) }
 
 pub trait ComponentWiseMinMax {
 	fn component_wise_min(self, other: Self) -> Self;
@@ -59,13 +67,16 @@ impl<T:std::ops::Sub> MinMax<T> { pub fn size(self) -> T::Output { self.max-self
 
 pub extern crate num;
 pub extern crate bytemuck;
+pub extern crate serde;
 
 #[macro_export] macro_rules! vector {
 ($N:literal $Vector:ident $($tuple:ident)+, $($c:ident)+, $($C:ident)+) => {
 mod mod_vector {
 use std::ops::{Add,Sub,Mul,Div,AddAssign,SubAssign,MulAssign,DivAssign};
 #[allow(non_camel_case_types)]
-#[repr(C)] #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)] pub struct $Vector<T> { $( pub $c: T ),+ }
+#[repr(C)] #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[cfg_attr(feature="serde", derive($crate::serde::Serialize, $crate::serde::Deserialize))]
+pub struct $Vector<T> { $( pub $c: T ),+ }
 //impl<T: Into<U>, U> From<$Vector<T>> for $Vector<U> { fn from(v: $Vector<T>) -> Self { $Vector{$($c:v.$c.into()),+} } } // conflicts with impl<T> From<T> for T
 impl From<$Vector<u16>> for $Vector<u32> { fn from(v: $Vector<u16>) -> Self { $Vector{$($c:v.$c.into()),+} } }
 impl From<$Vector<u32>> for $Vector<f32> { fn from(v: $Vector<u32>) -> Self { $Vector{$($c:v.$c as f32),+} } }
