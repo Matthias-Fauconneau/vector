@@ -67,7 +67,7 @@ impl<T:std::ops::Sub> MinMax<T> { pub fn size(self) -> T::Output { self.max-self
 
 pub extern crate num;
 pub extern crate bytemuck;
-pub extern crate serde;
+#[cfg(feature="serde")] pub extern crate serde;
 
 #[macro_export] macro_rules! vector {
 ($N:literal $Vector:ident $($tuple:ident)+, $($c:ident)+, $($C:ident)+) => {
