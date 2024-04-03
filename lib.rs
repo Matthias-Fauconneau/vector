@@ -78,6 +78,8 @@ use std::ops::{Add,Sub,Mul,Div,AddAssign,SubAssign,MulAssign,DivAssign};
 #[cfg_attr(feature="serde", derive($crate::serde::Serialize, $crate::serde::Deserialize))]
 pub struct $Vector<T> { $( pub $c: T ),+ }
 //impl<T: Into<U>, U> From<$Vector<T>> for $Vector<U> { fn from(v: $Vector<T>) -> Self { $Vector{$($c:v.$c.into()),+} } } // conflicts with impl<T> From<T> for T
+impl From<$Vector<u8>> for $Vector<u16> { fn from(v: $Vector<u8>) -> Self { $Vector{$($c:v.$c.into()),+} } }
+impl From<$Vector<u16>> for $Vector<u8> { fn from(v: $Vector<u16>) -> Self { $Vector{$($c:v.$c.try_into().unwrap()),+} } }
 impl From<$Vector<u16>> for $Vector<u32> { fn from(v: $Vector<u16>) -> Self { $Vector{$($c:v.$c.into()),+} } }
 impl From<$Vector<u32>> for $Vector<f32> { fn from(v: $Vector<u32>) -> Self { $Vector{$($c:v.$c as f32),+} } }
 impl From<$Vector<u16>> for $Vector<f32> { fn from(v: $Vector<u16>) -> Self { $Vector{$($c:v.$c.into()),+} } }
