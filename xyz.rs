@@ -8,9 +8,9 @@ impl<T:std::fmt::Display> std::fmt::Display for xy<T> {
 impl<T> xy<T> { pub fn yx(self) -> xy<T> { xy{x: self.y, y: self.x} } }
 
 impl xy<u32> { pub const fn signed(self) -> xy<i32> { xy{x: self.x as i32, y: self.y as i32} } }
-#[cfg(feature="generic_arg_infer")] impl xy<i32> { #[track_caller] pub fn try_unsigned(self) -> Option<xy<u32>> { self.map(|s| s.try_into().ok()).transpose() } }
-#[cfg(feature="generic_arg_infer")] impl xy<i32> { #[track_caller] pub fn unsigned(self) -> xy<u32> { self.try_unsigned().unwrap() } }
-#[cfg(feature="generic_arg_infer")] impl From<xy<i32>> for xy<u32> { fn from(i: xy<i32>) -> Self { i.unsigned() } }
+impl xy<i32> { #[track_caller] pub fn try_unsigned(self) -> Option<xy<u32>> { self.map(|s| s.try_into().ok()).transpose() } }
+impl xy<i32> { #[track_caller] pub fn unsigned(self) -> xy<u32> { self.try_unsigned().unwrap() } }
+impl From<xy<i32>> for xy<u32> { fn from(i: xy<i32>) -> Self { i.unsigned() } }
 impl From<xy<u32>> for xy<i32> { fn from(u: xy<u32>) -> Self { u.signed() } }
 impl From<xy<i32>> for xy<f32> { fn from(f: xy<i32>) -> Self { xy{x: f.x as f32, y: f.y as f32} } }
 impl From<xy<f32>> for xy<i32> { fn from(f: xy<f32>) -> Self { xy{x: f.x as i32, y: f.y as i32} } }

@@ -1,10 +1,8 @@
-package={name='vector', version='0.0.0',edition='2021'}
+package={name='vector', version='0.0.0',edition='2021', rust-version='1.79'}
 lib={path='lib.rs'}
 
 [features]
-generic_arg_infer=[]
 int_roundings=['num/int_roundings']
-unstable=['generic_arg_infer','int_roundings']
 
 [dependencies]
 num={git='https://github.com/Matthias-Fauconneau/num'}
