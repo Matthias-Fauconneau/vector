@@ -41,16 +41,17 @@ impl<T:ComponentWiseMinMax> MinMax<T> {
 }
 pub fn reduce_minmax<T: ComponentWiseMinMax>(iter: impl IntoIterator<Item=MinMax<T>>) -> Option<MinMax<T>> { iter.into_iter().reduce(MinMax::minmax) }
 pub fn minmax<T: ComponentWiseMinMax+Copy>(iter: impl IntoIterator<Item=T>) -> Option<MinMax<T>> { reduce_minmax(iter.into_iter().map(|x| MinMax{min: x, max: x})) }
-
-impl<T:std::ops::AddAssign+Copy> MinMax<T> { pub fn translate(&mut self, offset: T) { self.min += offset; self.max += offset; } }
 impl<T:ComponentWiseMinMax+Copy> MinMax<T> {
 	pub fn clip(self, b: Self) -> Self { Self{
 		min: component_wise_min(self.max, component_wise_max(self.min, b.min)),
 		max: component_wise_max(self.min, component_wise_min(self.max, b.max))
 	} }
 }
+impl<T:ComponentWiseMinMax+Copy+PartialEq> MinMax<T> {
+	pub fn contains(&self, p: T) -> bool { component_wise_min(self.min, p) == self.min && component_wise_max(self.max, p) == self.max }
+}
+impl<T:std::ops::AddAssign+Copy> MinMax<T> { pub fn translate(&mut self, offset: T) { self.min += offset; self.max += offset; } }
 impl<T:std::ops::Sub> MinMax<T> { pub fn size(self) -> T::Output { self.max-self.min } }
-//impl<T> MinMax<T> where for<'t> &'t T: std::ops::Sub { pub fn size(&self) -> <&T as std::ops::Sub>::Output { self.max-self.min } }
 
 #[macro_export] macro_rules! forward_ref_binop {{impl $Op:ident, $op:ident for $t:ty, $u:ty} => {
 	impl<'t, T:$Op+Copy> std::ops::$Op<$u> for &'t $t { type Output = <$t as std::ops::$Op<$u>>::Output; fn $op(self, b: $u) -> Self::Output { std::ops::$Op::$op(*self, b) } }
