@@ -155,6 +155,7 @@ impl std::iter::Sum<$Vector<f32>> for $Vector<f32> { fn sum<I:Iterator<Item=$Vec
 impl std::iter::Sum<$Vector<f64>> for $Vector<f64> { fn sum<I:Iterator<Item=$Vector<f64>>>(iter: I) -> Self { iter.fold(<Self as num::Zero>::ZERO, std::ops::Add::add) } }
 
 impl<T:Copy+Mul> $Vector<T> { fn mul(s: T, v: Self) -> $Vector<T::Output> { $Vector{$($c: s*v.$c),+} } }
+impl Mul<$Vector<u16>> for u16 { type Output=$Vector<u16>; fn mul(self, v: $Vector<u16>) -> Self::Output { $Vector::mul(self, v) } }
 impl Mul<$Vector<u32>> for u32 { type Output=$Vector<u32>; fn mul(self, v: $Vector<u32>) -> Self::Output { $Vector::mul(self, v) } }
 impl Mul<u32> for $Vector<u32> { type Output=$Vector<u32>; fn mul(self, b: u32) -> Self::Output { $Vector::mul(b, self) } }
 impl Mul<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn mul(self, v: $Vector<f32>) -> Self::Output { $Vector::mul(self, v) } }
