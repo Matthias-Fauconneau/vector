@@ -84,6 +84,7 @@ impl From<$Vector<u16>> for $Vector<u8> { fn from(v: $Vector<u16>) -> Self { $Ve
 impl From<$Vector<u16>> for $Vector<u32> { fn from(v: $Vector<u16>) -> Self { $Vector{$($c:v.$c.into()),+} } }
 impl From<$Vector<u32>> for $Vector<f32> { fn from(v: $Vector<u32>) -> Self { $Vector{$($c:v.$c as f32),+} } }
 impl From<$Vector<u16>> for $Vector<f32> { fn from(v: $Vector<u16>) -> Self { $Vector{$($c:v.$c.into()),+} } }
+impl From<$Vector<u8>> for $Vector<f32> { fn from(v: $Vector<u8>) -> Self { $Vector{$($c:v.$c.into()),+} } }
 impl From<$Vector<f32>> for $Vector<u32> { fn from(v: $Vector<f32>) -> Self { $Vector{$($c:unsafe{v.$c.to_int_unchecked()}),+} } }
 impl From<$Vector<f32>> for $Vector<f64> { fn from(v: $Vector<f32>) -> Self { $Vector{$($c:v.$c as f64),+} } }
 impl From<$Vector<f64>> for $Vector<f32> { fn from(v: $Vector<f64>) -> Self { $Vector{$($c:v.$c as f32),+} } }
