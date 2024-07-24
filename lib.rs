@@ -34,6 +34,7 @@ pub fn min<T: ComponentWiseMinMax+Copy>(iter: impl IntoIterator<Item=T>) -> Opti
 pub fn max<T: ComponentWiseMinMax+Copy>(iter: impl IntoIterator<Item=T>) -> Option<T> { iter.into_iter().reduce(ComponentWiseMinMax::component_wise_max) }
 
 #[derive(PartialEq,Eq,Clone,Copy,Debug)] pub struct MinMax<T> { pub min: T, pub max: T }
+impl<T:std::fmt::Display> std::fmt::Display for MinMax<T> {  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { write!(f, "{}-{}", self.min, self.max) } }
 impl<T:num::Zero> num::Zero for MinMax<T> { const ZERO: Self = MinMax{min: T::ZERO, max: T::ZERO}; }
 impl<T> From<MinMax<T>> for std::ops::Range<T> { fn from(MinMax{min,max}: MinMax<T>) -> Self { min .. max }}
 impl<T:ComponentWiseMinMax> MinMax<T> {
