@@ -53,6 +53,12 @@ impl<T:ComponentWiseMinMax+Copy+PartialEq> MinMax<T> {
 }
 impl<T:std::ops::AddAssign+Copy> MinMax<T> { pub fn translate(&mut self, offset: T) { self.min += offset; self.max += offset; } }
 impl<T:std::ops::Sub> MinMax<T> { pub fn size(self) -> T::Output { self.max-self.min } }
+impl<T> MinMax<T> { pub fn map<U>(self, mut f: impl FnMut(T)->U) -> MinMax<U> { let MinMax{min,max}=self; MinMax{min: f(min), max: f(max)} } }
+impl MinMax<uint2> {
+	pub fn signed(self) -> MinMax<int2> { self.map(|p| p.signed()) }
+	pub fn extend(self, pad: u32) -> MinMax<int2> { let MinMax{min,max}=self.signed(); MinMax{min: min-xy::from(pad as i32), max: max+xy::from(pad as i32)} }
+}
+impl MinMax<int2> {pub fn unsigned(self) -> MinMax<uint2> { self.map(|p| p.unsigned()) } }
 
 #[macro_export] macro_rules! forward_ref_binop {{impl $Op:ident, $op:ident for $t:ty, $u:ty} => {
 	impl<'t, T:$Op+Copy> std::ops::$Op<$u> for &'t $t { type Output = <$t as std::ops::$Op<$u>>::Output; fn $op(self, b: $u) -> Self::Output { std::ops::$Op::$op(*self, b) } }
