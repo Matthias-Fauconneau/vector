@@ -59,11 +59,13 @@ impl<T> MinMax<T> {
 }
 impl MinMax<uint2> {
 	pub fn signed(self) -> MinMax<int2> { self.map(|p| p.signed()) }
-	pub fn extend(self, pad: u32) -> MinMax<int2> { let MinMax{min,max}=self.signed(); MinMax{min: min-xy::from(pad as i32), max: max+xy::from(pad as i32)} }
+	pub fn area(self) -> u32 { self.signed().area() }
 }
 impl MinMax<int2> {
 	pub fn try_unsigned(self) -> Option<MinMax<uint2>, > { self.try_map(|p| p.try_unsigned()) }
 	#[track_caller] pub fn unsigned(self) -> MinMax<uint2> { self.try_unsigned().unwrap() }
+	pub fn area(self) -> u32 { let xy{x,y} = self.size().unsigned(); x*y }
+	pub fn extend(self, pad: u32) -> MinMax<int2> { let MinMax{min,max}=self; MinMax{min: min-xy::from(pad as i32), max: max+xy::from(pad as i32)} }
 }
 
 #[macro_export] macro_rules! forward_ref_binop {{impl $Op:ident, $op:ident for $t:ty, $u:ty} => {
