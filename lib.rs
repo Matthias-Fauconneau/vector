@@ -89,7 +89,7 @@ pub extern crate bytemuck;
 mod mod_vector {
 use std::ops::{Add,Sub,Mul,Div,AddAssign,SubAssign,MulAssign,DivAssign};
 #[allow(non_camel_case_types)]
-#[repr(C)] #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[repr(C)] #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, std::hash::Hash)]
 #[cfg_attr(feature="serde", derive($crate::serde::Serialize, $crate::serde::Deserialize))]
 pub struct $Vector<T> { $( pub $c: T ),+ }
 //impl<T: Into<U>, U> From<$Vector<T>> for $Vector<U> { fn from(v: $Vector<T>) -> Self { $Vector{$($c:v.$c.into()),+} } } // conflicts with impl<T> From<T> for T
