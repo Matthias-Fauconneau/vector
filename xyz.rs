@@ -73,3 +73,7 @@ mod mod_xyz {
   pub fn tangent_space(n@xyz{x,y,z}: vec3) -> (vec3, vec3) { let t = crate::normalize(if x > y { xyz{x: -z, y: 0., z: x} } else { xyz{x: 0., y: z, z: -y} }); (t, crate::normalize(cross(n, t))) }
 }
 pub use mod_xyz::*;
+
+#[allow(non_camel_case_types)] pub type mat3 = xyz<vec3>;
+impl From<mat3> for [[f32; 3]; 3] { fn from(m: mat3) -> Self { <[_; 3]>::from(m.map(|c| <[_; 3]>::from(c))) }}
+impl From<[[f32; 3]; 3]> for mat3  { fn from(m: [[f32; 3]; 3]) -> Self { xyz::from(m.map(|c| xyz::from(c))) }}

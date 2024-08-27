@@ -78,6 +78,7 @@ impl MinMax<int2> {
 	impl<T:$Op> $Op for $Vector<T> { type Output=$Vector<T::Output>; fn $op(self, b: Self) -> Self::Output { Self::Output{$($c: self.$c.$op(b.$c)),+} } }
 	$crate::forward_ref_binop!{ impl $Op, $op for $Vector<T>, $Vector<T> }
 	impl<T:$OpAssign> $OpAssign for $Vector<T> { fn $op_assign(&mut self, b: Self) { $(self.$c.$op_assign(b.$c);)+ } }
+	impl<T:$OpAssign+Copy> $OpAssign<T> for $Vector<T> { fn $op_assign(&mut self, b: T) { $(self.$c.$op_assign(b);)+ } }
 }}
 
 pub extern crate num;
