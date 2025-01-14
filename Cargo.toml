@@ -3,6 +3,7 @@ lib={path='lib.rs'}
 
 [features]
 int_roundings=['num/int_roundings']
+std=['num/std']
 
 [dependencies]
 num={git='https://github.com/Matthias-Fauconneau/num'}

@@ -1,8 +1,8 @@
 mod mod_xy {
 vector!(2 xy T T, x y, X Y);
 
-impl<T:std::fmt::Display> std::fmt::Display for xy<T> {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { write!(f, "{},{}", self.x, self.y) }
+impl<T:core::fmt::Display> core::fmt::Display for xy<T> {
+	fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result { write!(f, "{},{}", self.x, self.y) }
 }
 
 impl<T> xy<T> { pub fn yx(self) -> xy<T> { xy{x: self.y, y: self.x} } }
@@ -22,8 +22,8 @@ impl From<xy<f32>> for xy<i32> { fn from(f: xy<f32>) -> Self { xy{x: f.x as i32,
 #[allow(non_camel_case_types)] pub type vec2 = xy<f32>;
 
 pub fn cross2(a: vec2, b: vec2) -> f32 { a.x*b.y - a.y*b.x }
-pub fn atan(v:vec2) -> f32 { v.y.atan2(v.x) }
-pub fn rotate(angle: f32, xy{x,y}: vec2) -> vec2 { let (s,c)=f32::sin_cos(angle); xy{x: c*x - s*y, y: s*x + c*y} }
+#[cfg(feature="std")] pub fn atan(v:vec2) -> f32 { v.y.atan2(v.x) }
+#[cfg(feature="std")] pub fn rotate(angle: f32, xy{x,y}: vec2) -> vec2 { let (s,c)=f32::sin_cos(angle); xy{x: c*x - s*y, y: s*x + c*y} }
 
 #[cfg(feature="int_roundings")] use num::Ratio;
 #[cfg(feature="int_roundings")] pub fn ceil(scale: Ratio, v: uint2) -> uint2 { v.map(|c| scale.ceil(c)) }
@@ -36,7 +36,7 @@ pub fn rotate(angle: f32, xy{x,y}: vec2) -> vec2 { let (s,c)=f32::sin_cos(angle)
 	impl $Op<&$u> for &$t { type Output = <$t as $Op<$u>>::Output; fn $op(self, b: &$u) -> Self::Output { $Op::$op(*self, *b) } }
 }}
 
-#[cfg(feature="int_roundings")] use std::ops::{Mul,Div};
+#[cfg(feature="int_roundings")] use core::ops::{Mul,Div};
 #[cfg(feature="int_roundings")] impl Mul<uint2> for Ratio { type Output=uint2; #[track_caller] fn mul(self, b: uint2) -> Self::Output { ceil(self, b) } }
 #[cfg(feature="int_roundings")] forward_ref_binop!{Mul, mul, uint2, Ratio}
 #[cfg(feature="int_roundings")] impl Mul<int2> for Ratio { type Output=int2; #[track_caller] fn mul(self, b: int2) -> Self::Output { ifloor(self, b) } }
@@ -47,7 +47,7 @@ pub fn rotate(angle: f32, xy{x,y}: vec2) -> vec2 { let (s,c)=f32::sin_cos(angle)
 
 pub type Rect = crate::MinMax<int2>;
 
-use std::ops::{Add,Sub};
+use core::ops::{Add,Sub};
 impl Add<Rect> for int2 { type Output=Rect; #[track_caller] fn add(self, r: Rect) -> Self::Output { Rect{min:self+r.min, max:self+r.max} } }
 impl Sub<uint2> for Rect { type Output=Rect; #[track_caller] fn sub(self, b: uint2) -> Self::Output { -b.signed()+self } }
 
