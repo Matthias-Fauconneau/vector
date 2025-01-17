@@ -45,7 +45,18 @@ pub fn cross2(a: vec2, b: vec2) -> f32 { a.x*b.y - a.y*b.x }
 #[cfg(feature="int_roundings")] impl Div<Ratio> for int2 { type Output=int2; fn div(self, r: Ratio) -> Self::Output { xy{x:self.x/r, y:self.y/r} } }
 #[cfg(feature="int_roundings")] forward_ref_binop!{Div, div, Ratio, uint2}
 
-pub type Rect = crate::MinMax<int2>;
+use crate::MinMax;
+impl MinMax<uint2> {
+	pub fn signed(self) -> MinMax<int2> { self.map(|p| p.signed()) }
+	pub fn area(self) -> u32 { self.signed().area() }
+}
+impl MinMax<int2> {
+	pub fn try_unsigned(self) -> Option<MinMax<uint2>, > { self.try_map(|p| p.try_unsigned()) }
+	#[track_caller] pub fn unsigned(self) -> MinMax<uint2> { self.try_unsigned().unwrap() }
+	pub fn area(self) -> u32 { let xy{x,y} = self.size().unsigned(); x*y }
+	pub fn extend(self, pad: u32) -> MinMax<int2> { let MinMax{min,max}=self; MinMax{min: min-xy::from(pad as i32), max: max+xy::from(pad as i32)} }
+}
+pub type Rect = MinMax<int2>;
 
 use core::ops::{Add,Sub};
 impl Add<Rect> for int2 { type Output=Rect; #[track_caller] fn add(self, r: Rect) -> Self::Output { Rect{min:self+r.min, max:self+r.max} } }
@@ -70,10 +81,14 @@ mod mod_xyz {
 		pub fn xz(self) -> super::xy<T> { let xyz{x,z,..} = self; super::xy{x, y: z} }
 	}
 	pub fn cross(a: vec3, b: vec3) -> vec3 { xyz{x: a.y*b.z - a.z*b.y, y: a.z*b.x - a.x*b.z, z: a.x*b.y - a.y*b.x} }
-  pub fn tangent_space(n@xyz{x,y,z}: vec3) -> (vec3, vec3) { let t = crate::normalize(if x > y { xyz{x: -z, y: 0., z: x} } else { xyz{x: 0., y: z, z: -y} }); (t, crate::normalize(cross(n, t))) }
+	//pub fn tangent_space(n@xyz{x,y,z}: vec3) -> (vec3, vec3) { let t = crate::normalize(if x > y { xyz{x: -z, y: 0., z: x} } else { xyz{x: 0., y: z, z: -y} }); (t, crate::normalize(cross(n, t))) }
 }
 pub use mod_xyz::*;
 
 #[allow(non_camel_case_types)] pub type mat3 = xyz<vec3>;
 impl From<mat3> for [[f32; 3]; 3] { fn from(m: mat3) -> Self { <[_; 3]>::from(m.map(|c| <[_; 3]>::from(c))) }}
 impl From<[[f32; 3]; 3]> for mat3  { fn from(m: [[f32; 3]; 3]) -> Self { xyz::from(m.map(|c| xyz::from(c))) }}
+
+vector!(4 xyzw T T T T, x y z w, X Y Z W);
+#[allow(non_camel_case_types)] pub type vec4 = xyzw<f32>;
+#[allow(non_camel_case_types)] pub type mat4 = xyzw<vec4>;

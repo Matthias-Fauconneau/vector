@@ -1,16 +1,19 @@
 #![no_std]
 use core::{ops::{Mul,Div,Sub}, iter::Sum};
+
 pub fn dot<T:Mul>(a: T, b: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { (a*b).into_iter().sum() }
 pub fn sq<T:Mul+Copy>(v: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { dot(v, v) }
 pub fn norm<T:Mul+Copy>(v: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum+num::Sqrt> { num::Sqrt::sqrt(sq(v)) }
-pub fn normalize<T:Mul+Copy+ Div<<<T as Mul>::Output as IntoIterator>::Item> >(v: T) ->
-	<T as Div<<<T as Mul>::Output as IntoIterator>::Item> >::Output
+
+pub fn normalize<T:Mul+Copy+ Div<<<T as Mul>::Output as IntoIterator>::Item> >(v: T) -> <T as Div<<<T as Mul>::Output as IntoIterator>::Item> >::Output
   where <T as Mul>::Output: IntoIterator<Item: Sum+num::Sqrt>
 	{ v/norm(v) }
+
 pub fn distance<T:Sub>(a: T, b: T) -> <<<T as Sub>::Output as Mul>::Output as IntoIterator>::Item
 	where T::Output: Mul+Copy, <<T as Sub>::Output as Mul>::Output: IntoIterator<Item: Sum+num::Sqrt>
 	{ norm(b-a) }
 
+// Yields min/max of each components. By comparison, std::cmp::{min,max}(impl Ord) yields either value completely.
 pub trait ComponentWiseMinMax {
 	fn component_wise_min(self, other: Self) -> Self;
 	fn component_wise_max(self, other: Self) -> Self;
@@ -18,7 +21,7 @@ pub trait ComponentWiseMinMax {
 pub fn component_wise_min<T: ComponentWiseMinMax>(a: T, b: T) -> T { a.component_wise_min(b) }
 pub fn component_wise_max<T: ComponentWiseMinMax>(a: T, b: T) -> T { a.component_wise_max(b) }
 
-// /!\ not defining ComponentWiseMinMax implementation for any Ord to exclude types which might simultaneously have components (i.e vectors) but implement Ord
+// /!\ cannot impl ComponentWiseMinMax for Ord since some types (i.e vectors) simultaneously have components but implement Ord
 macro_rules! impl_ComponentWiseMinMax {
 	($($T:ident)+) => {$(
 		impl ComponentWiseMinMax for $T {
@@ -54,16 +57,6 @@ impl<T:core::ops::Sub> MinMax<T> { pub fn size(self) -> T::Output { self.max-sel
 impl<T> MinMax<T> {
 	pub fn try_map<U>(self, mut f: impl FnMut(T)->Option<U>) -> Option<MinMax<U>> { let MinMax{min,max}=self; Some(MinMax{min: f(min)?, max: f(max)?}) }
 	pub fn map<U>(self, mut f: impl FnMut(T)->U) -> MinMax<U> { let MinMax{min,max}=self; MinMax{min: f(min), max: f(max)} }
-}
-impl MinMax<uint2> {
-	pub fn signed(self) -> MinMax<int2> { self.map(|p| p.signed()) }
-	pub fn area(self) -> u32 { self.signed().area() }
-}
-impl MinMax<int2> {
-	pub fn try_unsigned(self) -> Option<MinMax<uint2>, > { self.try_map(|p| p.try_unsigned()) }
-	#[track_caller] pub fn unsigned(self) -> MinMax<uint2> { self.try_unsigned().unwrap() }
-	pub fn area(self) -> u32 { let xy{x,y} = self.size().unsigned(); x*y }
-	pub fn extend(self, pad: u32) -> MinMax<int2> { let MinMax{min,max}=self; MinMax{min: min-xy::from(pad as i32), max: max+xy::from(pad as i32)} }
 }
 
 #[macro_export] macro_rules! forward_ref_binop {{impl $Op:ident, $op:ident for $t:ty, $u:ty} => {

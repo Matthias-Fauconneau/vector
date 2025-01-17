@@ -1,9 +1,10 @@
-package={name='vector', version='0.0.0',edition='2021', rust-version='1.79'}
+package={name='vector', version='0.0.0', edition='2024'}
 lib={path='lib.rs'}
 
 [features]
 int_roundings=['num/int_roundings']
 std=['num/std']
+default=['std']
 
 [dependencies]
 num={git='https://github.com/Matthias-Fauconneau/num'}
