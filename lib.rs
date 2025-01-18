@@ -161,8 +161,8 @@ $crate::impl_Op!{$Vector $($c)+: Div div DivAssign div_assign}
 impl<T:Div+Copy> Div<T> for $Vector<T> { type Output=$Vector<T::Output>; fn div(self, b: T) -> Self::Output { Self::Output{$($c: self.$c/b),+} } }
 
 //impl<T:Add> core::iter::Sum<$Vector<T>> for $Vector<T> where Self:num::Zero+Add { fn sum<I:Iterator<Item=A>>(iter: I) -> Self { iter.fold(<Self as num::Zero>::ZERO, core::ops::Add::add) } }
-impl core::iter::Sum<$Vector<f32>> for $Vector<f32> { fn sum<I:Iterator<Item=$Vector<f32>>>(iter: I) -> Self { iter.fold(<Self as num::Zero>::ZERO, core::ops::Add::add) } }
-impl core::iter::Sum<$Vector<f64>> for $Vector<f64> { fn sum<I:Iterator<Item=$Vector<f64>>>(iter: I) -> Self { iter.fold(<Self as num::Zero>::ZERO, core::ops::Add::add) } }
+impl core::iter::Sum<$Vector<f32>> for $Vector<f32> { fn sum<I:Iterator<Item=$Vector<f32>>>(iter: I) -> Self { iter.fold(<Self as $crate::num::Zero>::ZERO, core::ops::Add::add) } }
+impl core::iter::Sum<$Vector<f64>> for $Vector<f64> { fn sum<I:Iterator<Item=$Vector<f64>>>(iter: I) -> Self { iter.fold(<Self as $crate::num::Zero>::ZERO, core::ops::Add::add) } }
 
 impl<T:Copy+Mul> $Vector<T> { fn mul(s: T, v: Self) -> $Vector<T::Output> { $Vector{$($c: s*v.$c),+} } }
 impl Mul<$Vector<u8>> for u8 { type Output=$Vector<u8>; fn mul(self, v: $Vector<u8>) -> Self::Output { $Vector::mul(self, v) } }
@@ -172,7 +172,7 @@ impl Mul<u32> for $Vector<u32> { type Output=$Vector<u32>; fn mul(self, b: u32) 
 impl Mul<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn mul(self, v: $Vector<f32>) -> Self::Output { $Vector::mul(self, v) } }
 impl Mul<$Vector<f64>> for f64 { type Output=$Vector<f64>; fn mul(self, v: $Vector<f64>) -> Self::Output { $Vector::mul(self, v) } }
 
-impl<T> num::Lerp<$Vector<T>> for f32 where f32: num::Lerp<T> { fn lerp(&self, a: $Vector<T>, b: $Vector<T>) -> $Vector<T> {
+impl<T> $crate::num::Lerp<$Vector<T>> for f32 where f32: $crate::num::Lerp<T> { fn lerp(&self, a: $Vector<T>, b: $Vector<T>) -> $Vector<T> {
 	a.zip(b).map(|(a,b)| self.lerp(a,b)).collect()
 } }
 
