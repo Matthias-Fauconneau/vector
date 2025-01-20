@@ -81,14 +81,33 @@ mod mod_xyz {
 		pub fn xz(self) -> super::xy<T> { let xyz{x,z,..} = self; super::xy{x, y: z} }
 	}
 	pub fn cross(a: vec3, b: vec3) -> vec3 { xyz{x: a.y*b.z - a.z*b.y, y: a.z*b.x - a.x*b.z, z: a.x*b.y - a.y*b.x} }
-	//pub fn tangent_space(n@xyz{x,y,z}: vec3) -> (vec3, vec3) { let t = crate::normalize(if x > y { xyz{x: -z, y: 0., z: x} } else { xyz{x: 0., y: z, z: -y} }); (t, crate::normalize(cross(n, t))) }
 }
 pub use mod_xyz::*;
-
-#[allow(non_camel_case_types)] pub type mat3 = xyz<vec3>;
-impl From<mat3> for [[f32; 3]; 3] { fn from(m: mat3) -> Self { <[_; 3]>::from(m.map(|c| <[_; 3]>::from(c))) }}
-impl From<[[f32; 3]; 3]> for mat3  { fn from(m: [[f32; 3]; 3]) -> Self { xyz::from(m.map(|c| xyz::from(c))) }}
 
 vector!(4 xyzw T T T T, x y z w, X Y Z W);
 #[allow(non_camel_case_types)] pub type vec4 = xyzw<f32>;
 #[allow(non_camel_case_types)] pub type mat4 = xyzw<vec4>;
+
+use core::array::from_fn as eval;
+pub fn transpose<T: Copy, const M: usize, const N:usize>(m: [[T; N]; M]) -> [[T; M]; N] { eval(|i| eval(|j| m[j][i])) }
+#[allow(non_camel_case_types)] type Matrix<const M: usize, const N:usize> = [[f32; N]; M];
+pub fn mul<const M: usize, const N:usize, const P:usize>(a: Matrix<M,N>, b: Matrix<N,P>) -> Matrix<M,P> { eval(|i| eval(|j| (0..N).map(|k| a[i][k]*b[k][j]).sum())) }
+pub fn mulv<const M: usize, const N:usize>(a: Matrix<M,N>, b: [f32; N]) -> [f32; M] { mul(a, b.map(|k| [k])).map(|[k]| k) }
+//pub fn mulv<const M: usize, const N:usize>(a: Matrix<M,N>, b: [f32; N]) -> [f32; M] { eval(|i| (0..N).map(|k| a[i][k]*b[k]).sum()) }
+pub fn mul1<const M: usize, const N:usize, const P:usize>(a: f32, b: Matrix<N,P>) -> Matrix<M,P> { eval(|i| eval(|j| a*b[i][j])) }
+
+fn minor<const N:usize>(m: [[f32; N]; N], i: usize, j: usize) -> f32 where [[f32; N-1]; N-1]:Det {
+	fn from_iter<T, const N: usize>(mut iter: impl Iterator<Item=T>) -> [T; N] { let a = [(); N].map(|_| iter.next().unwrap()); assert!(iter.next().is_none()); a }
+	det(from_iter(m.into_iter().enumerate().filter(|&(row,_)| row!=i).map(|(_,row)| from_iter(row.into_iter().enumerate().filter(|&(column,_)| column!=j).map(|(_,m)| m)))))
+}
+fn cofactor<const N:usize>(m: [[f32; N]; N], i: usize, j: usize) -> f32 where [[f32; N-1]; N-1]:Det { (match (i+j)%2 { 0=>1., 1=>-1., _=>unreachable!()})*minor(m,i,j) }
+fn det_n<const N:usize>(m: [[f32; N]; N]) -> f32 where [[f32; N-1]; N-1]:Det { (0..N).map(|j| m[0][j]*cofactor(m, 0,j)).sum() }
+trait Det { fn det(self) -> f32; }
+impl Det for [[f32; 3]; 3] { fn det(self) -> f32 { det_n(self) }}
+impl Det for [[f32; 2]; 2] { fn det(self) -> f32 { det_n(self) }}
+impl Det for [[f32; 1]; 1] { fn det(self) -> f32 { self[0][0] }}
+fn det<T: Det>(t: T) -> f32 { t.det() }
+fn adjugate<const N:usize>(m: [[f32; N]; N]) -> [[f32; N]; N] where [[f32; N-1]; N-1]:Det { eval(|i| eval(|j| cofactor(m, j,i)) ) }
+#[allow(private_bounds)] pub fn inverse<const N:usize>(m: [[f32; N]; N]) -> [[f32; N]; N] where [[f32; N]; N]:Det, [[f32; N-1]; N-1]:Det { mul1(1./det(m), adjugate(m)) }
+
+#[allow(non_camel_case_types)] pub type mat3 = Matrix<3,3>;
