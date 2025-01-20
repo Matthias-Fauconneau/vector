@@ -182,8 +182,10 @@ impl Div<$Vector<u32>> for u32 { type Output=$Vector<u32>; fn div(self, v: $Vect
 impl Div<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn div(self, v: $Vector<f32>) -> Self::Output { $Vector::div(self, v) } }
 impl Div<$Vector<f64>> for f64 { type Output=$Vector<f64>; fn div(self, v: $Vector<f64>) -> Self::Output { $Vector::div(self, v) } }
 
+impl<T: core::iter::Sum> $Vector<T> { pub fn sum(self) -> T { self.into_iter().sum() } }
+
 impl<T> $Vector<Option<T>> {
-	pub fn transpose(self) -> Option<$Vector<T>> { Some($Vector{$($c: self.$c?),+}) }
+	pub fn transpose(self) -> Option<$Vector<T>> { Some($Vector{$($c: self.$c?),+}) } // try_unsigned
 	//pub fn unwrap_or_else(self, f: impl Fn()->T+Copy) -> $Vector<T> { self.map(move |x| x.unwrap_or_else(f)) }
 }
 }
