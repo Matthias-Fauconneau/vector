@@ -96,6 +96,8 @@ pub fn mulv<const M: usize, const N:usize>(a: Matrix<M,N>, b: [f32; N]) -> [f32;
 //pub fn mulv<const M: usize, const N:usize>(a: Matrix<M,N>, b: [f32; N]) -> [f32; M] { eval(|i| (0..N).map(|k| a[i][k]*b[k]).sum()) }
 pub fn mul1<const M: usize, const N:usize, const P:usize>(a: f32, b: Matrix<N,P>) -> Matrix<M,P> { eval(|i| eval(|j| a*b[i][j])) }
 
+pub fn diagonal<const N: usize>(diagonal: [f32; N]) -> [[f32; N]; N] { eval(|i| eval(|j| if i==j { diagonal[i]  } else { 0. })) }
+
 fn minor<const N:usize>(m: [[f32; N]; N], i: usize, j: usize) -> f32 where [[f32; N-1]; N-1]:Det {
 	fn from_iter<T, const N: usize>(mut iter: impl Iterator<Item=T>) -> [T; N] { let a = [(); N].map(|_| iter.next().unwrap()); assert!(iter.next().is_none()); a }
 	det(from_iter(m.into_iter().enumerate().filter(|&(row,_)| row!=i).map(|(_,row)| from_iter(row.into_iter().enumerate().filter(|&(column,_)| column!=j).map(|(_,m)| m)))))

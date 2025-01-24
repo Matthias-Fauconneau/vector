@@ -173,9 +173,7 @@ impl Mul<u32> for $Vector<u32> { type Output=$Vector<u32>; fn mul(self, b: u32) 
 impl Mul<$Vector<f32>> for f32 { type Output=$Vector<f32>; fn mul(self, v: $Vector<f32>) -> Self::Output { $Vector::mul(self, v) } }
 impl Mul<$Vector<f64>> for f64 { type Output=$Vector<f64>; fn mul(self, v: $Vector<f64>) -> Self::Output { $Vector::mul(self, v) } }
 
-impl<T> $crate::num::Lerp<$Vector<T>> for f32 where f32: $crate::num::Lerp<T> { fn lerp(&self, a: $Vector<T>, b: $Vector<T>) -> $Vector<T> {
-	a.zip(b).map(|(a,b)| self.lerp(a,b)).collect()
-} }
+impl<T: $crate::num::Lerp> $crate::num::Lerp for $Vector<T> { fn lerp(t: f32, a: Self, b: Self) -> Self { a.zip(b).map(|(a,b)| $crate::num::lerp(t,a,b)).collect() } }
 
 impl<T:Copy+Div> $Vector<T> { fn div(s: T, v: Self) -> $Vector<T::Output> { $Vector{$($c: s/v.$c),+} } }
 impl Div<$Vector<u32>> for u32 { type Output=$Vector<u32>; fn div(self, v: $Vector<u32>) -> Self::Output { $Vector::div(self, v) } }
