@@ -1,5 +1,5 @@
 #![no_std]
-#![allow(incomplete_features)]#![feature(generic_const_exprs)] // matrix
+#![allow(incomplete_features)]#![cfg_attr(feature="generic_const_exprs",feature(generic_const_exprs))] // matrix
 use core::{ops::{Mul,Div,Sub}, iter::Sum};
 
 pub fn dot<T:Mul>(a: T, b: T) -> <T::Output as IntoIterator>::Item where T::Output: IntoIterator<Item: Sum> { (a*b).into_iter().sum() }

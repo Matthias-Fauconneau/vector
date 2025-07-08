@@ -3,6 +3,7 @@ lib={path='lib.rs'}
 
 [features]
 int_roundings=['num/int_roundings']
+generic_const_exprs=[]
 std=['num/std']
 default=['std']
 

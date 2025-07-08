@@ -98,18 +98,18 @@ pub fn mul1<const M: usize, const N:usize, const P:usize>(a: f32, b: Matrix<N,P>
 
 pub fn diagonal<const N: usize>(diagonal: [f32; N]) -> [[f32; N]; N] { eval(|i| eval(|j| if i==j { diagonal[i]  } else { 0. })) }
 
-fn minor<const N:usize>(m: [[f32; N]; N], i: usize, j: usize) -> f32 where [[f32; N-1]; N-1]:Det {
+#[cfg(feature="generic_const_exprs")] fn minor<const N:usize>(m: [[f32; N]; N], i: usize, j: usize) -> f32 where [[f32; N-1]; N-1]:Det {
 	fn from_iter<T, const N: usize>(mut iter: impl Iterator<Item=T>) -> [T; N] { let a = [(); N].map(|_| iter.next().unwrap()); assert!(iter.next().is_none()); a }
 	det(from_iter(m.into_iter().enumerate().filter(|&(row,_)| row!=i).map(|(_,row)| from_iter(row.into_iter().enumerate().filter(|&(column,_)| column!=j).map(|(_,m)| m)))))
 }
-fn cofactor<const N:usize>(m: [[f32; N]; N], i: usize, j: usize) -> f32 where [[f32; N-1]; N-1]:Det { (match (i+j)%2 { 0=>1., 1=>-1., _=>unreachable!()})*minor(m,i,j) }
-fn det_n<const N:usize>(m: [[f32; N]; N]) -> f32 where [[f32; N-1]; N-1]:Det { (0..N).map(|j| m[0][j]*cofactor(m, 0,j)).sum() }
-trait Det { fn det(self) -> f32; }
-impl Det for [[f32; 3]; 3] { fn det(self) -> f32 { det_n(self) }}
-impl Det for [[f32; 2]; 2] { fn det(self) -> f32 { det_n(self) }}
-impl Det for [[f32; 1]; 1] { fn det(self) -> f32 { self[0][0] }}
-fn det<T: Det>(t: T) -> f32 { t.det() }
-fn adjugate<const N:usize>(m: [[f32; N]; N]) -> [[f32; N]; N] where [[f32; N-1]; N-1]:Det { eval(|i| eval(|j| cofactor(m, j,i)) ) }
-#[allow(private_bounds)] pub fn inverse<const N:usize>(m: [[f32; N]; N]) -> [[f32; N]; N] where [[f32; N]; N]:Det, [[f32; N-1]; N-1]:Det { mul1(1./det(m), adjugate(m)) }
+#[cfg(feature="generic_const_exprs")] fn cofactor<const N:usize>(m: [[f32; N]; N], i: usize, j: usize) -> f32 where [[f32; N-1]; N-1]:Det { (match (i+j)%2 { 0=>1., 1=>-1., _=>unreachable!()})*minor(m,i,j) }
+#[cfg(feature="generic_const_exprs")] fn det_n<const N:usize>(m: [[f32; N]; N]) -> f32 where [[f32; N-1]; N-1]:Det { (0..N).map(|j| m[0][j]*cofactor(m, 0,j)).sum() }
+#[cfg(feature="generic_const_exprs")] trait Det { fn det(self) -> f32; }
+#[cfg(feature="generic_const_exprs")] impl Det for [[f32; 3]; 3] { fn det(self) -> f32 { det_n(self) }}
+#[cfg(feature="generic_const_exprs")] impl Det for [[f32; 2]; 2] { fn det(self) -> f32 { det_n(self) }}
+#[cfg(feature="generic_const_exprs")] impl Det for [[f32; 1]; 1] { fn det(self) -> f32 { self[0][0] }}
+#[cfg(feature="generic_const_exprs")] fn det<T: Det>(t: T) -> f32 { t.det() }
+#[cfg(feature="generic_const_exprs")] fn adjugate<const N:usize>(m: [[f32; N]; N]) -> [[f32; N]; N] where [[f32; N-1]; N-1]:Det { eval(|i| eval(|j| cofactor(m, j,i)) ) }
+#[cfg(feature="generic_const_exprs")] #[allow(private_bounds)] pub fn inverse<const N:usize>(m: [[f32; N]; N]) -> [[f32; N]; N] where [[f32; N]; N]:Det, [[f32; N-1]; N-1]:Det { mul1(1./det(m), adjugate(m)) }
 
 #[allow(non_camel_case_types)] pub type mat3 = Matrix<3,3>;
